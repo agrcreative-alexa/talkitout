@@ -15,7 +15,7 @@ Working folder: `/Users/allenrankin/Claude/TalkItOut`
 - `src/shell.html`, `src/tokens.css`, `src/engine.js` — **shared**. Read them. Don't edit `engine.js` or `shell.html`. In `tokens.css` you may add new tokens at the end of `:root`, never rename or remove.
 - `src/content.js` — piece E (scene writing). `src/scene.js|css` — piece A. `src/feedback.js|css` — piece B. `src/chrome.js|css` — piece C. `src/results.js|css` — piece D.
 - **Edit only your own piece's files.** Other builders are editing theirs right now. Never rewrite a file you don't own; never run a formatter across `src/`.
-- `python3 build.py` inlines everything into `talk-it-out.html` (the deliverable). It refuses to build if any JS part has a syntax error, so run `node --check src/<yours>.js` first. Other builders' in-progress files may briefly fail the build — wait 20 seconds and retry, don't fix their files.
+- `python3 build.py` inlines everything into `index.html` (the deliverable). It refuses to build if any JS part has a syntax error, so run `node --check src/<yours>.js` first. Other builders' in-progress files may briefly fail the build — wait 20 seconds and retry, don't fix their files.
 - Everything must stay inside that one HTML file: no image files, no external scripts. Art is inline SVG or CSS. The only external resource allowed is the existing Google Fonts link (with fallbacks). Sound, if any, is Web Audio generated in code, off-safe (never throws, never plays before a user gesture).
 
 ## The contract your piece must keep
@@ -26,7 +26,7 @@ Requirements that are not negotiable: works at 375px wide and at desktop width w
 
 ## See it in a browser
 
-The game is served at `http://localhost:8431/talk-it-out.html` (already running — do not start a server). Use the built-in browser tools (`mcp__Claude_Browser__*`). **Create your own tab with `tabs_create` and pass that `tabId` on every call** — other agents share the browser. Never touch a tab you didn't create; close yours when done. Check desktop width and `resize_window` preset `mobile` (reset to `desktop` after).
+The game is served at `http://localhost:8431/index.html` (already running — do not start a server). Use the built-in browser tools (`mcp__Claude_Browser__*`). **Create your own tab with `tabs_create` and pass that `tabId` on every call** — other agents share the browser. Never touch a tab you didn't create; close yours when done. Check desktop width and `resize_window` preset `mobile` (reset to `desktop` after).
 
 Jump straight to any state with URL params:
 - `?r=4` round 4, nothing picked · `?r=4&pick=great` (or `ok` / `oops`) that reply selected · add `&check=1` to show feedback

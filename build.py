@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Inline src/ parts into the single-file game: talk-it-out.html. Run: python3 build.py"""
+"""Inline src/ parts into the single-file game: index.html. Run: python3 build.py"""
 import os, pathlib, subprocess, sys
 
 root = pathlib.Path(__file__).parent
@@ -17,7 +17,7 @@ js = "\n".join((src / f"{n}.js").read_text() for n in JS)
 if "</script" in js.lower():
     sys.exit("BUILD REFUSED: a JS part contains '</script'")
 html = (src / "shell.html").read_text().replace("/*{{CSS}}*/", css).replace("/*{{JS}}*/", js)
-tmp = root / f"talk-it-out.html.{os.getpid()}.tmp"
+tmp = root / f"index.html.{os.getpid()}.tmp"
 tmp.write_text(html)
-tmp.replace(root / "talk-it-out.html")
-print(f"built talk-it-out.html ({len(html) // 1024} KB)")
+tmp.replace(root / "index.html")
+print(f"built index.html ({len(html) // 1024} KB)")
