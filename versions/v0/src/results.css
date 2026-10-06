@@ -1,0 +1,12 @@
+/* PIECE D — results screen */
+.results { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; padding-block: 32px; }
+.results-kicker { margin: 0; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; font-size: 14px; color: var(--ink-soft); }
+.results-title { margin: 0; font: 800 44px/1.05 var(--display); text-wrap: balance; }
+.results-blurb { margin: 0; color: var(--ink-soft); }
+.results-score { margin: 8px 0; font-size: 20px; }
+.results-score b { font: 800 40px/1 var(--display); color: var(--banana-deep); }
+.skillrows { list-style: none; margin: 8px 0 16px; padding: 0; width: 100%; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.skillrow { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 12px 16px; border: 2px solid var(--line); border-radius: var(--r); }
+.skillrow-name { font-weight: 800; }
+.skillrow-score { font-weight: 800; color: var(--banana-deep); font-variant-numeric: tabular-nums; }
+.skillrow-tip { grid-column: 1 / -1; font-size: 15px; color: var(--ink-soft); }

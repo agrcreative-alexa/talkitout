@@ -1,0 +1,125 @@
+/* PIECE B — feedback moment (docked footer). One beat after Check: monkey + verdict + bananas → one reason → Continue.
+   The button never moves: same width, same bottom-right spot (full-width bottom on phones) in every state; no resting
+   transforms on it. The sheet grows upward above it. Only `.is-arriving` (added once, on Check) animates. */
+.dock { --fb-wash: var(--paper); --fb-deep: var(--ink); --fb-btn: var(--banana); --fb-edge: var(--banana-deep);
+  position: relative; overflow: hidden; background: var(--paper); border-top: 2px solid var(--line); }
+.dock-in { position: relative; padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px)); }
+.dock-row { max-width: 860px; margin: 0 auto; display: flex; align-items: flex-end; gap: 22px; }
+
+/* ---------- the one button: chunky, obviously pressable, always in the same place ---------- */
+.dock .btn { flex: none; width: 200px; min-width: 0; min-height: 58px; padding: 0 16px; margin: 0 0 5px; border-radius: 18px;
+  font: 800 18px/1 var(--body); letter-spacing: .07em; text-transform: uppercase;
+  background: var(--fb-btn); color: var(--ink); box-shadow: 0 5px 0 var(--fb-edge), inset 0 2px 0 rgba(255,255,255,.35);
+  transition: transform .08s, box-shadow .08s, filter .12s; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.dock .btn:hover:not(:disabled) { filter: brightness(1.06); }
+.dock .btn:active:not(:disabled) { transform: translateY(5px); box-shadow: 0 0 0 var(--fb-edge), inset 0 2px 0 rgba(255,255,255,.35); }
+.dock .btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.dock .btn:disabled { background: #e9edf5; color: #9aa5be; box-shadow: 0 5px 0 #dbe1ee; cursor: default; }
+
+/* ---------- before Check ---------- */
+.dock-check .dock-row { justify-content: space-between; }
+.dock-hint { margin: 0; align-self: center; font: 700 17px/1.2 var(--body); color: var(--ink-soft); }
+.dock-check.is-ready .dock-hint { color: var(--ink); }
+/* "ready" is a ring that breathes out of the button — the button itself stays put */
+.dock-check.is-ready .btn::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  box-shadow: 0 0 0 0 rgba(255, 201, 51, .75); animation: fb-ring 2.4s .2s ease-out infinite; }
+@keyframes fb-ring { 0% { box-shadow: 0 0 0 0 rgba(255, 201, 51, .75); } 45%, 100% { box-shadow: 0 0 0 14px rgba(255, 201, 51, 0); } }
+
+/* ---------- after Check: tones ---------- */
+.dock-fb { border-top-color: transparent; }
+.dock-great { --fb-wash: var(--great-wash); --fb-deep: var(--great-deep); --fb-btn: #179468; --fb-edge: #0e6b4a; }
+.dock-ok    { --fb-wash: var(--ok-wash);    --fb-deep: var(--ok-deep);    --fb-btn: #c97b00; --fb-edge: #955a00; }
+/* oops reads "let's look at that": warm peach and soft coral, not alarm red */
+.dock-oops  { --fb-wash: #fff0e6;           --fb-deep: #a4432f;           --fb-btn: #d95f4b; --fb-edge: #a84433; }
+.dock-fb::before { content: ''; position: absolute; inset: 0 0 -24px; background: var(--fb-wash); }
+.dock-fb .btn { color: #fff; }
+
+.fb-body { flex: 1; min-width: 0; align-self: center; display: flex; align-items: center; gap: 16px; }
+
+/* icon: monkey on a white disc, with a little verdict badge */
+.fb-icon { position: relative; flex: none; width: 72px; height: 72px; }
+.fb-disc { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 50%; background: #fff; box-shadow: 0 4px 0 rgba(35,48,79,.10); }
+.fb-monkey { width: 84%; height: 84%; display: block; }
+.fb-badge-wrap { position: absolute; right: -4px; bottom: -4px; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%;
+  background: var(--fb-btn); border: 3px solid var(--fb-wash); }
+.fb-badge { width: 19px; height: 19px; display: block; }
+.fb-sparks { position: absolute; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; }
+.fb-sparks i { position: absolute; left: -4.5px; top: -4.5px; width: 9px; height: 9px; border-radius: 3px; background: var(--banana); opacity: 0;
+  transform: rotate(var(--a)) translateY(calc(var(--d) * -1)) scale(.2); }
+.fb-sparks i:nth-child(3n) { background: var(--great); border-radius: 50%; }
+.fb-sparks i:nth-child(4n+1) { background: #ff8a80; }
+
+/* words: headline, then ONE reason line, then at most one quiet extra */
+.verdict { flex: 1; min-width: 0; }
+.verdict-top { display: flex; align-items: center; gap: 10px; min-height: 34px; }
+.verdict-head { margin: 0; min-width: 0; font: 800 30px/1.05 var(--display); color: var(--fb-deep); }
+.verdict-peek { font-size: 20px; line-height: 1.1; color: var(--ink); opacity: .78; }
+.fb-reward { flex: none; display: inline-flex; align-items: center; gap: 1px; padding: 2px 8px 2px 11px; border-radius: 99px; background: #fff; box-shadow: 0 3px 0 rgba(35,48,79,.10); }
+.fb-plus { font: 800 19px/1 var(--display); color: #b98600; margin-right: 2px; padding-top: 2px; }
+.fb-nana { display: inline-grid; }
+.fb-banana { width: 24px; height: 24px; display: block; }
+.verdict-why { margin: 3px 0 0; max-width: 34em; font: 700 18px/1.3 var(--body); color: var(--ink); text-wrap: pretty; }
+
+.fb-foot { margin: 6px 0 0; display: flex; align-items: center; gap: 6px; font: 700 13.5px/1.3 var(--body); color: var(--fb-deep); }
+.fb-foot[hidden] { display: none; }
+.fb-hint { opacity: .82; }
+.fb-tap { flex: none; width: 16px; height: 16px; }
+.fb-tip { align-items: baseline; gap: 8px; color: var(--ink); font-size: 14px; }
+.fb-tip b { flex: none; padding: 3px 7px 2px; border-radius: 6px; background: rgba(255,255,255,.85); color: var(--fb-deep);
+  font: 800 10.5px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; }
+
+/* gentle scenes: same shape, lower voice */
+.is-gentle .verdict-head:not(.verdict-peek) { font: 700 24px/1.1 var(--display); }
+.is-gentle .fb-reward { box-shadow: none; background: rgba(255,255,255,.7); }
+.is-gentle .fb-plus { font-size: 16px; }
+.is-gentle .fb-banana { width: 19px; height: 19px; }
+
+/* ---------- arrival (once, on Check). Everything starts visible-but-small: no empty frames. The button does not move. ---------- */
+.is-arriving::before { animation: fb-rise .34s cubic-bezier(.2,.9,.3,1.15) backwards; }
+.is-arriving .fb-disc { animation: fb-pop .46s cubic-bezier(.3,1.7,.5,1) backwards; }
+.is-arriving .fb-badge-wrap { animation: fb-pop-s .4s .16s cubic-bezier(.3,1.9,.5,1) backwards; }
+.is-arriving .fb-reward { animation: fb-pop-s .4s .1s cubic-bezier(.3,1.7,.5,1) backwards; }
+.is-arriving .fb-nana { animation: fb-nana .42s calc(.22s + var(--n) * .14s) cubic-bezier(.3,1.9,.5,1) backwards; }
+.is-arriving .verdict-head, .is-arriving .verdict-why, .is-arriving .fb-foot { animation: fb-in .3s ease-out backwards; }
+.is-arriving .fb-foot { animation-delay: .5s; animation-name: fb-fade; }
+.is-arriving .fb-sparks i { animation: fb-spark .7s .12s cubic-bezier(.2,.8,.3,1) both; }
+.is-arriving.dock-ok .fb-disc { animation-name: fb-pop-ok; }
+.is-arriving.dock-oops .fb-disc { animation: fb-tilt .6s ease-out backwards; }
+.is-arriving.is-gentle .fb-disc, .is-arriving.is-gentle .fb-badge-wrap, .is-arriving.is-gentle .fb-reward { animation: fb-soft .5s ease-out backwards; }
+.is-arriving.is-gentle .fb-nana { animation: none; }
+@keyframes fb-rise { from { transform: translateY(100%); } }
+@keyframes fb-pop { from { transform: scale(.62) rotate(-16deg); } }
+@keyframes fb-pop-s { from { transform: scale(.6); } }
+@keyframes fb-pop-ok { from { transform: scale(.62); } 70% { transform: scale(1.07) rotate(6deg); } }
+@keyframes fb-tilt { from { transform: scale(.7); } 45% { transform: scale(1.03) rotate(-8deg); } 75% { transform: rotate(4deg); } }
+@keyframes fb-soft { from { transform: scale(.9); opacity: .5; } }
+@keyframes fb-nana { from { transform: translateY(-9px) scale(.55) rotate(-50deg); } }
+@keyframes fb-in { from { transform: translateY(6px); opacity: .35; } }
+@keyframes fb-fade { from { opacity: 0; } }
+@keyframes fb-spark { from { transform: rotate(var(--a)) translateY(-10px) scale(1); opacity: 1; } 60% { opacity: 1; } }
+
+/* ---------- phone: sheet content on top, the button full-width at the very bottom ---------- */
+@media (max-width: 600px) {
+  .dock-in { padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .dock-row { flex-direction: column; align-items: stretch; gap: 10px; }
+  .dock .btn { width: 100%; min-height: 54px; }
+  .dock-hint { display: none; }
+  .fb-body { align-self: stretch; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 0 11px; align-items: center; }
+  .fb-icon { width: 40px; height: 40px; }
+  .fb-disc { box-shadow: 0 3px 0 rgba(35,48,79,.10); }
+  .fb-badge-wrap { width: 20px; height: 20px; right: -5px; bottom: -4px; border-width: 2px; }
+  .fb-badge { width: 13px; height: 13px; }
+  .fb-sparks i { width: 6px; height: 6px; left: -3px; top: -3px; transform: rotate(var(--a)) translateY(calc(var(--d) * -.62)) scale(.2); }
+  .verdict { display: contents; }
+  .verdict-top { min-height: 40px; gap: 8px; }
+  .verdict-head { font-size: 24px; }
+  .verdict-peek { font-size: 18px; }
+  .is-gentle .verdict-head:not(.verdict-peek) { font-size: 19px; }
+  .fb-reward { padding: 2px 6px 2px 9px; }
+  .fb-plus { font-size: 17px; }
+  .fb-banana { width: 21px; height: 21px; }
+  .verdict-why, .fb-foot { grid-column: 1 / -1; }
+  .verdict-why { margin-top: 6px; font-size: 16px; line-height: 1.3; }
+  .fb-foot { margin-top: 4px; font-size: 13px; line-height: 1.25; }
+  .fb-tip { font-size: 13px; }
+}

@@ -1,0 +1,2355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Talk It Out</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:ital,wght@0,500;0,700;0,800;1,600&display=swap">
+<style>
+/* SHARED — design tokens and page frame. Pieces may ADD tokens here, never rename or remove.
+   Layout: one column, three stacked regions (top bar / scrolling stage / docked footer) filling the viewport. */
+:root {
+  --ink: #23304f;         /* text */
+  --ink-soft: #6a7592;    /* secondary text */
+  --paper: #ffffff;
+  --mist: #eef3fb;        /* quiet fills, tracks */
+  --line: #dfe6f2;        /* borders */
+  --line-deep: #c9d3e6;   /* chunky bottom edge of buttons/cards */
+  --banana: #ffc933;      /* brand accent */
+  --banana-deep: #e0a800;
+  --pick: #3b82f6;        /* selected */
+  --pick-wash: #e3efff;
+  --great: #1fa97a;  --great-wash: #dcf7ec;  --great-deep: #14815c;
+  --ok: #e08a00;     --ok-wash: #fff1d1;     --ok-deep: #b06c00;
+  --oops: #e5484d;   --oops-wash: #ffe3e2;   --oops-deep: #b93338;
+  --display: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', sans-serif;
+  --body: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+  --r: 16px;
+  --col: 640px;           /* content column */
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--paper); color: var(--ink); font: 500 18px/1.45 var(--body); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--pick); outline-offset: 3px; }
+#tio { height: 100%; display: flex; flex-direction: column; }
+#tio-top, #tio-dock { flex: none; }
+#tio-stage { flex: 1; min-height: 0; overflow-y: auto; scrollbar-gutter: stable both-edges; padding: 8px 20px 24px; }
+#tio-stage > * { max-width: var(--col); margin-inline: auto; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* PIECE C — lesson chrome and flow */
+
+/* ---------- frame: the three regions fill the viewport, the page body never scrolls ---------- */
+html, body { overflow: hidden; overscroll-behavior: none; }
+#tio { height: 100vh; height: 100dvh; }
+#tio-stage { overflow-x: hidden; }
+#tio-dock { max-height: 72vh; max-height: 72dvh; overflow-y: auto; }   /* safety net: a tall dock scrolls itself, not the page */
+
+/* ---------- shared chunky button (other pieces recolour background + box-shadow) ---------- */
+.btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 54px; padding: 0 28px;
+  border: 0; border-radius: var(--r); font: 800 17px/1 var(--body); letter-spacing: .07em; text-transform: uppercase; white-space: nowrap;
+  background: var(--banana); color: var(--ink); box-shadow: 0 5px 0 var(--banana-deep);
+  -webkit-tap-highlight-color: transparent; user-select: none; touch-action: manipulation;
+  transition: transform .07s ease-out, box-shadow .07s ease-out, filter .12s; }
+.btn:hover:not(:disabled) { filter: brightness(1.05); }
+.btn:active:not(:disabled) { transform: translateY(4px); box-shadow: none; filter: none; }
+.btn:disabled { background: var(--mist); color: #a9b3c9; box-shadow: 0 5px 0 var(--line); cursor: default; }
+.btn:focus-visible { outline: 3px solid var(--pick); outline-offset: 4px; }
+
+/* ---------- mascot ---------- */
+.mk { display: block; overflow: visible; }
+.mk-hero { width: 100%; height: 100%; }
+.mk-hero .mk-wave { transform-origin: 74px 150px; animation: mk-wave 2.6s ease-in-out infinite; }
+.mk-hero .mk-bob { animation: mk-bob 3.2s ease-in-out infinite; }
+.mk-hero .mk-tail { transform-origin: 72px 180px; animation: mk-tail 3.2s ease-in-out infinite; }
+.mk-hero .mk-eyes { transform-box: fill-box; transform-origin: center; animation: mk-blink 4.2s infinite; }
+@keyframes mk-wave { 0%, 55%, 100% { transform: rotate(0); } 62%, 78% { transform: rotate(-16deg); } 70%, 86% { transform: rotate(8deg); } }
+@keyframes mk-bob { 0%, 100% { transform: translate(40px, 20px); } 50% { transform: translate(40px, 23px); } }
+@keyframes mk-tail { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(5deg); } }
+@keyframes mk-blink { 0%, 46%, 50%, 100% { transform: scaleY(1); } 48% { transform: scaleY(.1); } }
+
+/* ---------- start screen ---------- */
+.start { position: relative; min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding-block: 12px 20px; }
+.start-hero { position: relative; width: 300px; height: 270px; margin-bottom: 2px; }
+.start-hero::before { content: ''; position: absolute; left: 50%; bottom: 6px; width: 264px; height: 264px; margin-left: -132px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, #fff3c4 0, #ffe9a0 60%, #ffe08a 100%); }
+.start-monkey { position: absolute; inset: 0; animation: start-pop .55s cubic-bezier(.2, 1.4, .4, 1) backwards; }
+.start-bubble { position: absolute; z-index: 1; left: 64%; top: -14px; width: 178px; margin: 0; padding: 10px 14px; border-radius: 18px; background: var(--paper);
+  border: 2.5px solid var(--ink); box-shadow: 0 4px 0 var(--ink); font: 800 16px/1.2 var(--body); text-align: left;
+  transform-origin: 0 100%; animation: start-say .4s .45s cubic-bezier(.2, 1.5, .4, 1) backwards; }
+.start-bubble b { color: var(--ok-deep); }
+.start-bubble::after { content: ''; position: absolute; left: 16px; bottom: -11px; width: 16px; height: 16px; background: var(--paper);
+  border-right: 2.5px solid var(--ink); border-bottom: 2.5px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); transform: skewX(28deg) rotate(45deg); }
+.start-title { margin: 6px 0 0; font: 800 68px/.95 var(--display); letter-spacing: -.01em; color: var(--ink); animation: start-rise .45s .1s ease-out backwards; }
+.start-title span { display: inline-block; padding: 0 .12em; border-radius: 14px; background: var(--banana); transform: rotate(-3deg); }
+.start-sub { margin: 12px 0 22px; font-size: 20px; font-weight: 700; color: var(--ink-soft); animation: start-rise .45s .18s ease-out backwards; }
+.start-sub em { font-style: normal; color: var(--ink); }
+.start .btn-go { width: min(340px, 100%); min-height: 66px; border-radius: 20px; font-size: 22px; letter-spacing: .1em; box-shadow: 0 6px 0 var(--banana-deep); margin-bottom: 6px;
+  animation: start-rise .45s .26s ease-out backwards, start-nudge 2.4s 1.6s ease-in-out infinite; }
+.start .btn-go:active:not(:disabled) { transform: translateY(6px); animation: none; }
+.start-skills { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 8px; max-width: 540px; margin: 22px 0 0; padding: 0; }
+.sticker { padding: 6px 13px; border-radius: 12px; border: 2px solid rgba(35, 48, 79, .1); font: 800 14px/1.2 var(--body); transform: rotate(var(--tilt, 0deg));
+  animation: start-stick .35s calc(.5s + var(--n, 0) * .07s) cubic-bezier(.2, 1.6, .4, 1) backwards; }
+.sticker-0 { background: var(--pick-wash); } .sticker-1 { background: var(--great-wash); } .sticker-2 { background: var(--ok-wash); }
+.sticker-3 { background: var(--oops-wash); } .sticker-4 { background: #efe6ff; }
+@keyframes start-pop { from { transform: translateY(30px) scale(.7); opacity: 0; } }
+@keyframes start-say { from { transform: scale(0) rotate(-12deg); opacity: 0; } }
+@keyframes start-rise { from { transform: translateY(14px); opacity: 0; } }
+@keyframes start-stick { from { transform: scale(0) rotate(0); opacity: 0; } }
+@keyframes start-nudge { 0%, 78%, 100% { transform: none; } 84% { transform: translateY(-5px) rotate(-1.5deg); } 90% { transform: translateY(0) rotate(1deg); } 95% { transform: translateY(-2px); } }
+
+/* ---------- top bar ---------- */
+.topbar { display: flex; align-items: center; gap: 14px; max-width: 860px; margin: 0 auto; padding: 22px 20px 12px; animation: top-drop .35s ease-out backwards; }
+.topbar-quit { flex: none; display: grid; place-items: center; width: 44px; height: 44px; margin: 0 -8px 0 -12px; padding: 0; border: 0; border-radius: 14px; background: none; color: #a9b3c9;
+  transition: color .12s, background .12s, transform .08s; }
+.topbar-quit:hover { color: var(--ink-soft); background: var(--mist); }
+.topbar-quit:active { transform: scale(.9); }
+.progress { position: relative; flex: 1; min-width: 0; height: 18px; }
+.progress-track { height: 100%; border-radius: 99px; background: var(--mist); box-shadow: inset 0 2px 0 rgba(35, 48, 79, .06); overflow: hidden; }
+.progress-fill { position: relative; width: 0; height: 100%; border-radius: 99px; background: var(--banana); box-shadow: inset 0 -4px 0 rgba(224, 168, 0, .55);
+  transition: width .7s cubic-bezier(.3, 1.35, .45, 1); }
+.progress-fill::after { content: ''; position: absolute; left: 9px; right: 22px; top: 4px; height: 4px; border-radius: 9px; background: rgba(255, 255, 255, .6); }
+.progress-lane { position: absolute; inset: 0 14px; pointer-events: none; }
+.progress-rider { position: absolute; left: 0; top: 50%; width: 40px; height: 40px; margin: -21px 0 0 -20px; transition: left .7s cubic-bezier(.3, 1.35, .45, 1);
+  filter: drop-shadow(0 2px 0 rgba(35, 48, 79, .18)); }
+.is-snap .progress-fill, .is-snap .progress-rider { transition: none; }
+.progress.is-bump .progress-track { animation: bar-glow .7s ease-out; }
+.progress-rider.is-hop .mk { animation: rider-hop .7s cubic-bezier(.3, .7, .4, 1); }
+.progress-rider.is-shake .mk { animation: rider-shake .5s ease-in-out; }
+.topbar-count, .topbar-streak { position: relative; flex: none; display: flex; align-items: center; gap: 4px; white-space: nowrap; font: 800 24px/1 var(--display); color: var(--ink); }
+.topbar-count b, .topbar-streak b { display: inline-block; min-width: .62em; padding-top: .12em; font-weight: 800; font-variant-numeric: tabular-nums; text-align: left; }
+.topbar-streak { gap: 1px; color: #e85d04; margin-right: -2px; }
+.topbar-streak[hidden], .quit[hidden] { display: none; }
+.topbar-count.is-bump .ico-banana { animation: count-pop .55s cubic-bezier(.3, 1.6, .4, 1); }
+.topbar-count.is-bump b { animation: count-tick .45s cubic-bezier(.3, 1.6, .4, 1); }
+.topbar-streak.is-bump { animation: streak-pop .5s cubic-bezier(.3, 1.7, .4, 1); }
+.topbar-plus { position: absolute; right: 0; top: 100%; padding: 3px 8px; border-radius: 99px; background: var(--banana); color: var(--ink); font: 800 15px/1 var(--body);
+  pointer-events: none; animation: plus-float 1s ease-out forwards; }
+@keyframes top-drop { from { transform: translateY(-16px); opacity: 0; } }
+@keyframes bar-glow { 30% { box-shadow: 0 0 0 5px rgba(255, 201, 51, .35); } }
+@keyframes rider-hop { 0% { transform: none; } 30% { transform: translateY(-13px) rotate(-12deg) scale(1.12); } 55% { transform: translateY(0) rotate(6deg); } 75% { transform: translateY(-5px); } 100% { transform: none; } }
+@keyframes rider-shake { 0%, 100% { transform: none; } 20%, 60% { transform: translateX(-4px) rotate(-8deg); } 40%, 80% { transform: translateX(4px) rotate(8deg); } }
+@keyframes count-pop { 0% { transform: none; } 40% { transform: scale(1.45) rotate(-18deg); } 100% { transform: none; } }
+@keyframes count-tick { 0% { transform: translateY(8px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes streak-pop { 0% { transform: scale(.3); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes plus-float { 0% { transform: translateY(-6px) scale(.5); opacity: 0; } 20% { transform: translateY(4px) scale(1.1); opacity: 1; } 70% { transform: translateY(6px); opacity: 1; } 100% { transform: translateY(16px); opacity: 0; } }
+
+/* ---------- round-to-round: the new scene slides in, feedback dock rises ---------- */
+#tio-stage.is-arriving > * { animation: stage-arrive .26s cubic-bezier(.2, .9, .3, 1.08) backwards; }
+@keyframes stage-arrive { from { transform: translateX(36px); } }   /* slide only: the new round is readable from frame 0 */
+
+/* ---------- quit confirm ---------- */
+.quit { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 20px; background: rgba(35, 48, 79, .6); animation: quit-fade .18s ease-out; }
+.quit-card { width: min(360px, 100%); display: flex; flex-direction: column; align-items: center; padding: 22px 22px 18px; border-radius: 26px; background: var(--paper); text-align: center;
+  box-shadow: 0 8px 0 rgba(35, 48, 79, .35); animation: quit-pop .3s cubic-bezier(.2, 1.4, .4, 1); }
+.quit-art { margin-top: -4px; }
+.quit-head { margin: 6px 0 0; font: 800 30px/1.1 var(--display); }
+.quit-text { margin: 4px 0 18px; font-size: 18px; font-weight: 700; color: var(--ink-soft); }
+.quit-card .btn { width: 100%; }
+.quit-leave { margin-top: 8px; background: var(--paper); color: var(--oops); box-shadow: inset 0 0 0 2px var(--line), 0 5px 0 var(--line); }
+.quit-leave:hover:not(:disabled) { filter: none; background: var(--oops-wash); }
+.quit-leave:active:not(:disabled) { box-shadow: inset 0 0 0 2px var(--line); }
+@keyframes quit-fade { from { opacity: 0; } }
+@keyframes quit-pop { from { transform: translateY(24px) scale(.9); opacity: 0; } }
+
+/* ---------- small screens ---------- */
+@media (max-width: 480px) {
+  .topbar { gap: 10px; padding: 14px 16px 8px; }
+  .topbar-quit { margin: 0 -8px 0 -12px; }
+  .topbar-count, .topbar-streak { font-size: 21px; }
+  .topbar-count .ico-banana { width: 24px; height: 24px; }
+  .start-hero { width: 236px; height: 212px; }
+  .start-hero::before { width: 208px; height: 208px; margin-left: -104px; }
+  .start-bubble { left: 50%; top: -30px; width: 150px; padding: 8px 12px; font-size: 14.5px; }
+  .start-title { font-size: 54px; }
+  .start-sub { font-size: 16px; margin: 10px 0 18px; }
+  .start-skills { margin-top: 18px; }
+}
+@media (max-height: 640px) {
+  .start-hero { width: 178px; height: 160px; }
+  .start-hero::before { width: 158px; height: 158px; margin-left: -79px; }
+  .start-bubble { left: 54%; top: -26px; width: 150px; font-size: 14px; }
+  .start-title { font-size: 46px; }
+  .start-sub { margin: 8px 0 14px; }
+  .start-skills { margin-top: 14px; }
+}
+
+/* PIECE A — scene screen
+   Reading order: 1 the speech bubble (hero) · 2 "What do you say?" · 3 the three reply cards. Everything else stays quiet.
+   The scene fills the stage: the three cards share out whatever height is left, so the screen is never top-heavy.
+   After Check (.scene.is-checked) the top compacts so all three cards sit between the top bar and the feedback sheet. */
+.scene { --tag: var(--banana-deep); display: flex; flex-direction: column; gap: 18px; padding-top: 10px; min-height: 100%; }
+.scene[data-skill="real"] { --tag: #e0568a; }
+.scene[data-skill="present"] { --tag: #3b82f6; }
+.scene[data-skill="well"] { --tag: #14a3b8; }
+.scene[data-skill="comfort"] { --tag: #8b5cf6; }
+.scene[data-skill="cool"] { --tag: #1fa97a; }
+.scene-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* skill tag + one-line setting */
+.scene-head { flex: none; display: flex; flex-direction: column; gap: 6px; }
+.scene-skill { margin: 0; display: flex; align-items: center; gap: 8px; font: 800 15px/1 var(--body); letter-spacing: .09em; text-transform: uppercase; color: var(--tag); }
+.scene-skill-ic { flex: none; width: 26px; height: 26px; padding: 5px; border-radius: 50%; background: var(--tag); color: #fff; }
+/* the setting is the one line that must not be skipped: body size, full ink (lighter in weight than the bubble) */
+.scene-setting { margin: 0; font-size: 20px; font-weight: 600; line-height: 1.3; color: var(--ink); text-wrap: pretty; }
+
+/* speaker: drawn character + speech bubble */
+.speaker { flex: none; display: flex; align-items: center; gap: 22px; }
+.char { flex: none; width: 172px; }
+.char-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.char-eyes { transform-box: fill-box; transform-origin: 50% 60%; animation: char-blink 4.6s 1.4s infinite; }
+.bubble { position: relative; flex: 0 1 auto; min-width: 0; padding: 22px 24px 20px; border: 3px solid var(--ink); border-radius: 26px; background: var(--paper);
+  box-shadow: 0 6px 0 rgba(35, 48, 79, .16); }
+.bubble::before { content: ''; position: absolute; left: -12px; top: 50%; width: 19px; height: 19px; margin-top: -4px; background: var(--paper);
+  border-left: 3px solid var(--ink); border-bottom: 3px solid var(--ink); border-bottom-left-radius: 5px; transform: rotate(45deg) skew(8deg, 8deg); }
+.bubble-who { position: absolute; left: 18px; top: -13px; padding: 5px 12px 4px; border-radius: 99px; background: var(--ink); color: #fff;
+  font: 800 13px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.bubble-says { margin: 0; font: 800 28px/1.18 var(--display); color: var(--ink); text-wrap: balance; }
+.bubble-short .bubble-says { font-size: 32px; }
+.bubble-long .bubble-says { font-size: 25px; }
+
+.scene-ask { flex: none; margin: 2px 0 -6px; font: 800 24px/1.1 var(--display); color: var(--ink); }
+
+/* reply cards — three different-coloured blocks, each led by a face showing how it's said */
+.replies { flex: 1 1 auto; display: flex; flex-direction: column; gap: 14px; padding-bottom: 6px; }
+.reply { --tint: #fff5d2; --edge: #f2cf63; --deep: #dcae2c; --face: #ffc933; --face-deep: #e0a800;
+  position: relative; flex: 1 1 auto; display: flex; align-items: center; gap: 16px; width: 100%; min-height: 88px; max-height: 170px; text-align: left; padding: 12px 20px 12px 14px;
+  border: 3px solid var(--edge); border-radius: 22px; background: var(--tint); color: var(--ink);
+  box-shadow: 0 6px 0 var(--deep); -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  transition: transform .09s, box-shadow .09s, background-color .12s, border-color .12s; }
+.reply-p1 { --tint: #ffe8f1; --edge: #f8b3cf; --deep: #e386ad; --face: #ff8fb8; --face-deep: #df6397; }
+.reply-p2 { --tint: #ebe6ff; --edge: #c5b6fb; --deep: #9d87ea; --face: #a98dfb; --face-deep: #8364e2; }
+
+.reply-face { flex: none; width: 96px; transition: transform .16s cubic-bezier(.3, 1.6, .5, 1); }
+.vf { display: block; width: 100%; height: auto; overflow: visible; }
+.vf-head, .vf-hand { fill: var(--face); }
+.vf-edge { fill: var(--face-deep); }
+.vf-hand { stroke: var(--face-deep); stroke-width: 2; }
+
+.reply-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.reply-text { font: 800 21px/1.25 var(--body); text-wrap: pretty; }
+/* the "do" half of a reply: a quiet stage direction, the same on every card, so it never hints at the answer */
+.reply-act { display: flex; align-items: flex-start; gap: 5px; font: italic 600 15.500px/1.25 var(--body); color: #55607d; text-wrap: pretty; }
+.reply-act-ic { flex: none; width: 15px; height: 15px; margin-top: 2px; opacity: .7; }
+
+/* 1/2/3 keyboard hint: small, in the corner, desktop only */
+.reply-key { position: absolute; top: 8px; right: 10px; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 7px; display: grid; place-items: center;
+  font: 800 12px/1 var(--body); color: #55607d; background: rgba(255, 255, 255, .75); box-shadow: inset 0 0 0 1.500px rgba(35, 48, 79, .16), 0 2px 0 rgba(35, 48, 79, .12); }
+
+/* hover: the whole card lifts, deepens in colour and gets a darker edge */
+@media (hover: hover) {
+  .reply:hover { transform: translateY(-4px); border-color: var(--deep); background-color: color-mix(in srgb, var(--tint) 72%, var(--edge));
+    box-shadow: 0 10px 0 var(--deep), 0 18px 22px -8px rgba(35, 48, 79, .32); }
+  .reply:hover .reply-face { transform: scale(1.1) rotate(-5deg); }
+}
+.reply:active { transform: translateY(5px); box-shadow: 0 1px 0 var(--deep); }
+.reply:focus-visible { outline: 3px solid var(--pick); outline-offset: 3px; }
+
+/* picked: the loudest thing on the screen — solid blue, a touch bigger, its face turned blue to match */
+.reply.is-picked .reply-face { transform: scale(1.12) rotate(-6deg); }
+.scene:not(.is-checked) .reply.is-picked { --edge: #1d4fc4; --deep: #173f9c; --tint: #2563eb; --face: #d6e6ff; --face-deep: #8fb4f5;
+  color: #fff; background-color: var(--tint); border-color: var(--edge); transform: scale(1.025); z-index: 1;
+  box-shadow: 0 7px 0 var(--deep), 0 0 0 5px rgba(37, 99, 235, .26); }
+.scene:not(.is-checked) .reply.is-picked:active { transform: scale(1.005) translateY(4px); box-shadow: 0 2px 0 var(--deep), 0 0 0 5px rgba(37, 99, 235, .26); }
+.scene:not(.is-checked) .reply.is-picked:focus-visible { outline-color: var(--ink); outline-offset: 7px; }
+.scene:not(.is-checked) .reply.is-picked .reply-act { color: #dbe8ff; }
+.scene:not(.is-checked) .reply.is-picked .reply-key { background: #fff; color: #1d4fc4; box-shadow: 0 2px 0 #173f9c; }
+/* ...and while one is picked the other two step back: pale card, greyed face, softer text (still plainly tappable) */
+.scene.has-pick .reply:not(.is-picked) { --tint: #f7f9fc; --edge: var(--line); --deep: var(--line-deep); color: #5d6883; box-shadow: 0 4px 0 var(--deep); }
+.scene.has-pick .reply:not(.is-picked) .reply-face { filter: saturate(.3); opacity: .7; }
+.scene.has-pick .reply:not(.is-picked) .reply-act { color: #7b859d; }
+.scene.has-pick .reply:not(.is-picked) .reply-key { opacity: .7; }
+@media (hover: hover) {
+  .scene.has-pick .reply:not(.is-picked):hover { border-color: var(--ink-soft); background-color: #fff; color: var(--ink);
+    box-shadow: 0 8px 0 var(--line-deep), 0 16px 20px -8px rgba(35, 48, 79, .3); }
+  .scene.has-pick .reply:not(.is-picked):hover .reply-face { filter: none; opacity: 1; }
+}
+/* gentle (loss) rounds: the three reply faces are quiet and muted */
+.scene[data-tone="gentle"] .reply { --face: #f0d488; --face-deep: #cdb065; }
+.scene[data-tone="gentle"] .reply-p1 { --face: #eeb4c8; --face-deep: #cf8fa7; }
+.scene[data-tone="gentle"] .reply-p2 { --face: #c3b6ee; --face-deep: #a092d4; }
+
+/* after Check: every card is still a button (tap = see its reason) */
+.reply-mark { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: var(--edge); }
+.reply-mark-ic { width: 23px; height: 23px; }
+.reply-why { background: var(--paper); color: var(--ink-soft); font: 800 20px/1 var(--display); box-shadow: inset 0 0 0 2px var(--line-deep), 0 3px 0 var(--line-deep); }
+.reply-flag { position: absolute; top: -13px; left: 16px; display: flex; align-items: center; gap: 4px; padding: 5px 11px 4px; border-radius: 99px; background: var(--edge); color: #fff;
+  font: 800 12.500px/1 var(--body); letter-spacing: .07em; text-transform: uppercase; white-space: nowrap; box-shadow: 0 2px 0 var(--deep); }
+.reply-flag-ic { width: 13px; height: 13px; margin-top: -1px; }
+.scene.is-checked .reply-key { display: none; }
+
+.reply.is-dim { --tint: var(--paper); --edge: var(--line); --deep: var(--line-deep); box-shadow: 0 4px 0 var(--deep); }
+.reply.is-dim .reply-text { color: #48546f; }
+.reply.is-great, .reply.is-best, .reply.is-peeked-great { --edge: var(--great); --deep: var(--great-deep); --tint: var(--great-wash); color: #0b5139; }
+.reply.is-ok, .reply.is-peeked-ok { --edge: var(--ok); --deep: var(--ok-deep); --tint: var(--ok-wash); color: #6b4200; }
+.reply.is-oops, .reply.is-peeked-oops { --edge: var(--oops); --deep: var(--oops-deep); --tint: var(--oops-wash); color: #86201f; }
+.reply.is-ok .reply-flag, .reply.is-ok .reply-mark { background: var(--ok-deep); }
+.reply.is-great .reply-flag, .reply.is-best .reply-flag { background: var(--great-deep); box-shadow: 0 2px 0 #0b5139; }
+.reply[class*="is-peeked-"] { --tint: var(--paper); }
+.scene.is-checked .reply-act { color: inherit; opacity: .8; }
+/* the best reply you missed: the brightest thing on the screen */
+.reply.is-best { border-width: 4px; box-shadow: 0 6px 0 var(--deep), 0 0 0 5px rgba(31, 169, 122, .2); }
+.reply.is-best .reply-mark { background: var(--banana); color: #7a5200; box-shadow: 0 3px 0 var(--banana-deep); }
+/* whichever reply the feedback sheet is talking about wears a navy ring */
+.reply.is-shown:not(.is-picked) { box-shadow: 0 6px 0 var(--deep), 0 0 0 4px var(--paper), 0 0 0 7px var(--ink); }
+.reply.is-best.is-shown { box-shadow: 0 6px 0 var(--deep), 0 0 0 4px var(--paper), 0 0 0 7px var(--ink); }
+.scene.is-checked .reply:active { transform: translateY(3px); }
+
+/* checked: compact the top so the three cards fit between the top bar and the feedback sheet */
+.scene.is-checked { gap: 12px; padding-top: 4px; }
+.scene.is-checked .scene-setting { display: none; }
+.scene.is-checked .scene-ask { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; }
+.scene.is-checked .char { width: 84px; }
+.scene.is-checked .char-eyes { animation: none; }
+/* fixed height: the speaker's line changes as you tap between replies, and nothing below may move when it does */
+.scene.is-checked .speaker { gap: 16px; height: 88px; }
+.scene.is-checked .bubble-says { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.scene.is-checked .bubble-back { min-width: 150px; }
+.scene.is-checked .bubble { padding: 15px 18px 11px; border-radius: 20px; box-shadow: 0 4px 0 rgba(35, 48, 79, .16); }
+.scene.is-checked .bubble-says, .scene.is-checked .bubble-short .bubble-says, .scene.is-checked .bubble-long .bubble-says { font-size: 19px; }
+.scene.is-checked .replies { gap: 16px; padding-top: 6px; padding-bottom: 10px; }
+.scene.is-checked .reply { min-height: 70px; max-height: 160px; padding-block: 9px; }
+.scene.is-checked .reply-face { width: 78px; transform: none; }
+.scene.is-checked .reply-text { font-size: 19px; }
+.scene.is-checked .reply-act { font-size: 14.500px; }
+
+/* motion — entry runs once per round (class added by scene.js). Nothing here starts invisible: the cards are on screen and
+   tappable from the first frame, they only settle into place. tokens.css switches it all off under reduced motion. */
+.scene.is-enter .char { animation: sc-pop .34s cubic-bezier(.3, 1.5, .5, 1) backwards; }
+.scene.is-enter .bubble { transform-origin: 0 55%; animation: sc-bubble .3s .04s cubic-bezier(.3, 1.4, .5, 1) backwards; }
+.scene.is-enter .reply { animation: sc-rise .26s calc(var(--n, 0) * .045s) cubic-bezier(.25, 1.3, .5, 1) backwards; }
+.scene.is-enter .reply-face { animation: sc-face .4s calc(.1s + var(--n, 0) * .06s) cubic-bezier(.3, 1.6, .5, 1) backwards; }
+.reply.just-picked { animation: sc-pick .26s cubic-bezier(.3, 1.6, .5, 1); }
+.scene:not(.is-checked) .reply.just-picked { animation-name: sc-pick-in; }
+/* after Check the speaker answers back: the face and the bubble pop so the eye goes there first */
+.speaker.is-react .char { animation: sc-pop .36s cubic-bezier(.3, 1.6, .5, 1) backwards; }
+.speaker.is-react .bubble { transform-origin: 0 55%; animation: sc-react .34s .05s cubic-bezier(.3, 1.6, .5, 1) backwards; }
+.reply.just-picked .reply-face { animation: sc-face .34s cubic-bezier(.3, 1.8, .5, 1) backwards; }
+.reply.is-great.just-checked { animation: sc-yes .5s cubic-bezier(.3, 1.5, .5, 1); }
+.reply.is-ok.just-checked { animation: sc-pick .3s; }
+.reply.is-oops.just-checked { animation: sc-no .42s; }
+.reply.is-best.just-checked { animation: sc-best .9s .25s cubic-bezier(.3, 1.4, .5, 1) backwards; }
+.reply.just-checked .reply-mark, .reply.just-checked .reply-flag { animation: sc-mark .36s .1s cubic-bezier(.3, 1.7, .5, 1) backwards; }
+@keyframes sc-pop { from { transform: scale(.82) rotate(-7deg); } }
+@keyframes sc-bubble { from { transform: scale(.88) translateX(-8px); } }
+@keyframes sc-rise { from { transform: translateY(14px); } }
+@keyframes sc-face { from { transform: scale(.7) rotate(-14deg); } }
+@keyframes sc-mark { from { transform: scale(.4) rotate(-12deg); } }
+@keyframes sc-pick-in { 0% { transform: scale(.97); } 60% { transform: scale(1.045); } 100% { transform: scale(1.025); } }
+@keyframes sc-react { 0% { transform: scale(.8) translateX(-6px); } 60% { transform: scale(1.05); } 100% { transform: none; } }
+@keyframes sc-pick { 0% { transform: scale(.97); } 60% { transform: scale(1.02); } 100% { transform: none; } }
+@keyframes sc-yes { 0% { transform: none; } 35% { transform: translateY(-7px) scale(1.02); } 70% { transform: translateY(1px); } 100% { transform: none; } }
+@keyframes sc-no { 0%, 100% { transform: none; } 20% { transform: translateX(-7px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(2px); } }
+@keyframes sc-best { 0% { transform: none; } 25% { transform: scale(1.035); box-shadow: 0 6px 0 var(--deep), 0 0 0 12px rgba(31, 169, 122, .28); } 55% { transform: scale(.995); } 100% { transform: none; } }
+@keyframes char-blink { 0%, 95%, 100% { transform: none; } 97.5% { transform: scaleY(.1); } }
+
+/* touch screens have no number keys */
+@media (hover: none) { .reply-key { display: none; } }
+
+@media (max-width: 560px) {
+  .scene { gap: 13px; padding-top: 2px; }
+  .scene-head { gap: 5px; }
+  .scene-skill { font-size: 13px; gap: 7px; }
+  .scene-skill-ic { width: 22px; height: 22px; padding: 4px; }
+  .scene-setting { font-size: 17.500px; line-height: 1.28; }
+  .speaker { gap: 13px; margin-top: 6px; }
+  .char { width: 92px; margin-left: -4px; }
+  .bubble { flex: 1 1 0; padding: 17px 13px 13px; border-radius: 22px; box-shadow: 0 5px 0 rgba(35, 48, 79, .16); }
+  .bubble::before { left: -11px; width: 17px; height: 17px; }
+  .bubble-who { left: 13px; top: -12px; font-size: 12px; padding: 4px 10px 3px; }
+  .bubble-says { font-size: 20px; line-height: 1.16; }
+  .bubble-short .bubble-says { font-size: 22px; }
+  .bubble-long .bubble-says { font-size: 18.500px; }
+  .scene-ask { font-size: 20px; margin: 2px 0 -4px; }
+  .replies { gap: 12px; }
+  .reply { min-height: 76px; max-height: 150px; padding: 10px 14px 10px 10px; gap: 10px; border-radius: 20px; }
+  .reply-face { width: 76px; }
+  .reply-key { display: none; }
+  .reply-body { gap: 4px; }
+  .reply-text { font-size: 17px; line-height: 1.24; }
+  .reply-act { font-size: 14px; }
+  .reply-act-ic { width: 13px; height: 13px; }
+  .reply-mark { width: 30px; height: 30px; }
+  .reply-mark-ic { width: 19px; height: 19px; }
+  .reply-why { font-size: 17px; }
+  .reply-flag { left: 12px; top: -12px; font-size: 11.500px; padding: 4px 9px 3px; }
+
+  .scene.is-checked { gap: 10px; padding-top: 0; }
+  .scene.is-checked .scene-head { display: none; }
+  .scene.is-checked .speaker { gap: 12px; margin-top: 4px; height: 66px; }
+  .scene.is-checked .bubble-back { min-width: 0; }
+  .scene.is-checked .char { width: 62px; margin-left: 0; }
+  .scene.is-checked .bubble { padding: 13px 12px 8px; border-width: 2.500px; border-radius: 18px; }
+  .scene.is-checked .bubble-says, .scene.is-checked .bubble-short .bubble-says, .scene.is-checked .bubble-long .bubble-says { font-size: 16.500px; line-height: 1.15; }
+  .scene.is-checked .bubble-who { font-size: 11px; top: -11px; }
+  .scene.is-checked .replies { gap: 15px; padding-top: 8px; padding-bottom: 8px; }
+  .scene.is-checked .reply { min-height: 62px; max-height: 132px; padding: 8px 10px 7px 8px; gap: 8px; border-radius: 18px; }
+  .scene.is-checked .reply-face { width: 62px; }
+  .scene.is-checked .reply-text { font-size: 16.500px; line-height: 1.2; }
+  .scene.is-checked .reply-act { font-size: 13.500px; line-height: 1.2; }
+  .scene.is-checked .reply-body { gap: 2px; }
+}
+@media (max-width: 350px) {
+  .char { width: 80px; }
+  .bubble-says, .bubble-short .bubble-says { font-size: 19px; }
+  .reply-face { width: 58px; }
+}
+/* tall phones have room to spare: spend it on the character */
+@media (max-width: 560px) and (min-width: 351px) and (min-height: 740px) {
+  .scene { gap: 15px; padding-top: 6px; }
+  .scene:not(.is-checked) .char { width: 100px; }
+  .scene:not(.is-checked) .bubble { padding: 19px 14px 15px; }
+  .scene:not(.is-checked) .bubble-says { font-size: 20.500px; }
+  .scene:not(.is-checked) .bubble-short .bubble-says { font-size: 23px; }
+  .scene:not(.is-checked) .bubble-long .bubble-says { font-size: 19px; }
+  .scene-ask { font-size: 22px; }
+}
+/* short windows: keep the cards on screen by trimming the portrait */
+@media (min-width: 561px) and (max-height: 860px) {
+  .scene { gap: 12px; padding-top: 2px; }
+  .scene:not(.is-checked) .char { width: 124px; }
+  .reply { min-height: 78px; }
+  .reply-face { width: 68px; }
+}
+/* small, short phones: trim the top and the card padding so all three replies stay above the Check button */
+@media (max-width: 560px) and (max-height: 700px) {
+  .scene { gap: 9px; padding-top: 0; }
+  .speaker { margin-top: 4px; }
+  .scene:not(.is-checked) .char { width: 74px; }
+  .scene:not(.is-checked) .bubble { padding: 14px 12px 10px; }
+  .scene:not(.is-checked) .bubble-says, .scene:not(.is-checked) .bubble-short .bubble-says { font-size: 18px; }
+  .scene-ask { font-size: 18px; margin: 0 0 -3px; }
+  .replies { gap: 10px; padding-bottom: 2px; }
+  .reply { min-height: 60px; padding-block: 6px; box-shadow: 0 4px 0 var(--deep); }
+  .reply-face { width: 58px; }
+  .reply-text { font-size: 16px; line-height: 1.2; }
+  .reply-act { font-size: 13px; line-height: 1.2; }
+}
+
+/* PIECE B — feedback moment (docked footer). One beat after Check: monkey + verdict + bananas → one reason → Continue.
+   The button never moves: same width, same bottom-right spot (full-width bottom on phones) in every state; no resting
+   transforms on it. The sheet grows upward above it. Only `.is-arriving` (added once, on Check) animates. */
+.dock { --fb-wash: var(--paper); --fb-deep: var(--ink); --fb-btn: var(--banana); --fb-edge: var(--banana-deep);
+  position: relative; overflow: hidden; background: var(--paper); border-top: 2px solid var(--line); }
+.dock-in { position: relative; padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px)); }
+.dock-row { max-width: 860px; margin: 0 auto; display: flex; align-items: flex-end; gap: 22px; }
+
+/* ---------- the one button: chunky, obviously pressable, always in the same place ---------- */
+.dock .btn { flex: none; width: 200px; min-width: 0; min-height: 58px; padding: 0 16px; margin: 0 0 5px; border-radius: 18px;
+  font: 800 18px/1 var(--body); letter-spacing: .07em; text-transform: uppercase;
+  background: var(--fb-btn); color: var(--ink); box-shadow: 0 5px 0 var(--fb-edge), inset 0 2px 0 rgba(255,255,255,.35);
+  transition: transform .08s, box-shadow .08s, filter .12s; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.dock .btn:hover:not(:disabled) { filter: brightness(1.06); }
+.dock .btn:active:not(:disabled) { transform: translateY(5px); box-shadow: 0 0 0 var(--fb-edge), inset 0 2px 0 rgba(255,255,255,.35); }
+.dock .btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.dock .btn:disabled { background: #e9edf5; color: #9aa5be; box-shadow: 0 5px 0 #dbe1ee; cursor: default; }
+
+/* ---------- before Check ---------- */
+.dock-check .dock-row { justify-content: space-between; }
+.dock-hint { margin: 0; align-self: center; font: 700 17px/1.2 var(--body); color: var(--ink-soft); }
+.dock-check.is-ready .dock-hint { color: var(--ink); }
+/* "ready" is a ring that breathes out of the button — the button itself stays put */
+.dock-check.is-ready .btn::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  box-shadow: 0 0 0 0 rgba(255, 201, 51, .75); animation: fb-ring 2.4s .2s ease-out infinite; }
+@keyframes fb-ring { 0% { box-shadow: 0 0 0 0 rgba(255, 201, 51, .75); } 45%, 100% { box-shadow: 0 0 0 14px rgba(255, 201, 51, 0); } }
+
+/* ---------- after Check: tones ---------- */
+.dock-fb { border-top-color: transparent; }
+.dock-great { --fb-wash: var(--great-wash); --fb-deep: var(--great-deep); --fb-btn: #179468; --fb-edge: #0e6b4a; }
+.dock-ok    { --fb-wash: var(--ok-wash);    --fb-deep: var(--ok-deep);    --fb-btn: #c97b00; --fb-edge: #955a00; }
+/* oops reads "let's look at that": warm peach and soft coral, not alarm red */
+.dock-oops  { --fb-wash: #fff0e6;           --fb-deep: #a4432f;           --fb-btn: #d95f4b; --fb-edge: #a84433; }
+/* peeking at a reply that isn't yours: no verdict colour at all — calm grey-blue, navy button */
+.dock-peek  { --fb-wash: #e9eef8;           --fb-deep: var(--ink);        --fb-btn: #3a4a78; --fb-edge: #232f52; }
+.dock-fb::before { content: ''; position: absolute; inset: 0 0 -24px; background: var(--fb-wash); }
+.dock-fb .btn { color: #fff; }
+
+.fb-body { flex: 1; min-width: 0; align-self: center; display: flex; align-items: center; gap: 16px; }
+
+/* icon: monkey on a white disc, with a little verdict badge */
+.fb-icon { position: relative; flex: none; width: 72px; height: 72px; }
+.fb-disc { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 50%; background: #fff; box-shadow: 0 4px 0 rgba(35,48,79,.10); }
+.fb-monkey { width: 84%; height: 84%; display: block; }
+.fb-badge-wrap { position: absolute; right: -4px; bottom: -4px; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%;
+  background: var(--fb-btn); border: 3px solid var(--fb-wash); }
+.fb-badge { width: 19px; height: 19px; display: block; }
+.fb-sparks { position: absolute; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; }
+.fb-sparks i { position: absolute; left: -4.5px; top: -4.5px; width: 9px; height: 9px; border-radius: 3px; background: var(--banana); opacity: 0;
+  transform: rotate(var(--a)) translateY(calc(var(--d) * -1)) scale(.2); }
+.fb-sparks i:nth-child(3n) { background: var(--great); border-radius: 50%; }
+.fb-sparks i:nth-child(4n+1) { background: #ff8a80; }
+
+/* words: headline, then ONE reason line, then at most one quiet extra */
+.verdict { flex: 1; min-width: 0; }
+.verdict-top { display: flex; align-items: center; gap: 10px; min-height: 34px; }
+.verdict-head { margin: 0; min-width: 0; white-space: nowrap; overflow: hidden; padding-bottom: 2px; font: 800 30px/1.05 var(--display); color: var(--fb-deep); }
+.verdict-peek { font-size: 20px; line-height: 1.1; color: var(--ink); opacity: .78; }
+.fb-reward { flex: none; display: inline-flex; align-items: center; gap: 1px; padding: 2px 8px 2px 11px; border-radius: 99px; background: #fff; box-shadow: 0 3px 0 rgba(35,48,79,.10); }
+.fb-plus { font: 800 19px/1 var(--display); color: #b98600; margin-right: 2px; padding-top: 2px; }
+.fb-nana { display: inline-grid; }
+.fb-banana { width: 24px; height: 24px; display: block; }
+.is-peek .fb-reward { visibility: hidden; }   /* the bananas belong to the player's own reply; keep the space, hide the claim */
+/* all three reasons share one cell, so the sheet is as tall as the longest whichever one is showing */
+.fb-whys { display: grid; margin: 3px 0 0; }
+.fb-whys > .verdict-why { grid-area: 1 / 1; }
+.verdict-why.is-ghost { visibility: hidden; }
+.verdict-why { margin: 0; max-width: 34em; font: 700 18px/1.3 var(--body); color: var(--ink); text-wrap: pretty; }
+
+.fb-foot { margin: 6px 0 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 16px; font: 700 13.5px/1.3 var(--body); color: var(--fb-deep); }
+.fb-foot p { margin: 0; display: flex; align-items: center; gap: 6px; }
+.fb-foot p[hidden] { display: none; }
+.fb-hint { opacity: .82; white-space: nowrap; }
+.fb-tap { flex: none; width: 16px; height: 16px; }
+.fb-foot .fb-tip { align-items: baseline; gap: 8px; color: var(--ink); font-size: 14px; }
+.fb-tip b { flex: none; padding: 3px 7px 2px; border-radius: 6px; background: rgba(255,255,255,.85); color: var(--fb-deep);
+  font: 800 10.5px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; }
+.fb-tip.is-tight b { font-size: 0; letter-spacing: 0; }
+.fb-tip.is-tight b::after { content: 'New'; font-size: 10.5px; letter-spacing: .08em; }
+
+/* gentle scenes: same shape, lower voice */
+.is-gentle .verdict-head:not(.verdict-peek) { font: 700 24px/1.1 var(--display); }
+.is-gentle .fb-reward { box-shadow: none; background: rgba(255,255,255,.7); }
+.is-gentle .fb-plus { font-size: 16px; }
+.is-gentle .fb-banana { width: 19px; height: 19px; }
+
+/* ---------- arrival (once, on Check). Everything starts visible-but-small: no empty frames. The button does not move. ---------- */
+.is-arriving::before { animation: fb-rise .34s cubic-bezier(.2,.9,.3,1.15) backwards; }
+.is-arriving .fb-disc { animation: fb-pop .46s cubic-bezier(.3,1.7,.5,1) backwards; }
+.is-arriving .fb-badge-wrap { animation: fb-pop-s .4s .16s cubic-bezier(.3,1.9,.5,1) backwards; }
+.is-arriving .fb-reward { animation: fb-pop-s .4s .1s cubic-bezier(.3,1.7,.5,1) backwards; }
+.is-arriving .fb-nana { animation: fb-nana .42s calc(.22s + var(--n) * .14s) cubic-bezier(.3,1.9,.5,1) backwards; }
+.is-arriving .verdict-head, .is-arriving .verdict-why, .is-arriving .fb-foot { animation: fb-in .3s ease-out backwards; }
+.is-arriving .fb-foot { animation-delay: .5s; animation-name: fb-fade; }
+.is-arriving .fb-sparks i { animation: fb-spark .7s .12s cubic-bezier(.2,.8,.3,1) both; }
+.is-arriving.dock-ok .fb-disc { animation-name: fb-pop-ok; }
+.is-arriving.dock-oops .fb-disc { animation: fb-tilt .6s ease-out backwards; }
+.is-arriving.is-gentle .fb-disc, .is-arriving.is-gentle .fb-badge-wrap, .is-arriving.is-gentle .fb-reward { animation: fb-soft .5s ease-out backwards; }
+.is-arriving.is-gentle .fb-nana { animation: none; }
+@keyframes fb-rise { from { transform: translateY(100%); } }
+@keyframes fb-pop { from { transform: scale(.62) rotate(-16deg); } }
+@keyframes fb-pop-s { from { transform: scale(.6); } }
+@keyframes fb-pop-ok { from { transform: scale(.62); } 70% { transform: scale(1.07) rotate(6deg); } }
+@keyframes fb-tilt { from { transform: scale(.7); } 45% { transform: scale(1.03) rotate(-8deg); } 75% { transform: rotate(4deg); } }
+@keyframes fb-soft { from { transform: scale(.9); opacity: .5; } }
+@keyframes fb-nana { from { transform: translateY(-9px) scale(.55) rotate(-50deg); } }
+@keyframes fb-in { from { transform: translateY(6px); opacity: .35; } }
+@keyframes fb-fade { from { opacity: 0; } }
+@keyframes fb-spark { from { transform: rotate(var(--a)) translateY(-10px) scale(1); opacity: 1; } 60% { opacity: 1; } }
+
+/* ---------- phone: sheet content on top, the button full-width at the very bottom ---------- */
+@media (max-width: 600px) {
+  .dock-in { padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .dock-row { flex-direction: column; align-items: stretch; gap: 10px; }
+  .dock .btn { width: 100%; min-height: 54px; }
+  .dock-hint { display: none; }
+  .fb-body { align-self: stretch; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 0 11px; align-items: center; }
+  .fb-icon { width: 40px; height: 40px; }
+  .fb-disc { box-shadow: 0 3px 0 rgba(35,48,79,.10); }
+  .fb-badge-wrap { width: 20px; height: 20px; right: -5px; bottom: -4px; border-width: 2px; }
+  .fb-badge { width: 13px; height: 13px; }
+  .fb-sparks i { width: 6px; height: 6px; left: -3px; top: -3px; transform: rotate(var(--a)) translateY(calc(var(--d) * -.62)) scale(.2); }
+  .verdict { display: contents; }
+  .verdict-top { min-height: 40px; gap: 8px; }
+  .verdict-head { font-size: 24px; }
+  .verdict-peek { font-size: 18px; }
+  .is-gentle .verdict-head:not(.verdict-peek) { font-size: 19px; }
+  .fb-reward { padding: 2px 6px 2px 9px; }
+  .fb-plus { font-size: 17px; }
+  .fb-banana { width: 21px; height: 21px; }
+  .fb-whys, .fb-foot { grid-column: 1 / -1; }
+  .fb-whys { margin-top: 6px; }
+  .verdict-why { font-size: 16px; line-height: 1.3; }
+  .fb-foot { margin-top: 4px; font-size: 13px; line-height: 1.25; }
+  .fb-foot .fb-tip { font-size: 13px; }
+}
+
+/* PIECE D — results screen. Every animation starts FROM a hidden/small keyframe and ends at the element's
+   normal style, so with reduced motion (tokens.css kills animations) the finished screen shows at once. */
+.results { --rs-wash: #fff3c4; --rs-ray: #ffe07a; --rs-deep: #b98500;
+  display: flex; flex-direction: column; justify-content: center; gap: 12px; min-height: 100%; text-align: center; padding-top: 4px; }
+.results[data-animal="penguin"] { --rs-wash: #e2f2ff; --rs-ray: #c3e3ff; --rs-deep: #2f6fb8; }
+.results[data-animal="parrot"]  { --rs-wash: #ddf7ea; --rs-ray: #b8edd3; --rs-deep: #14815c; }
+.results[data-animal="giraffe"] { --rs-wash: #ffecd9; --rs-ray: #ffd9b5; --rs-deep: #b5631c; }
+.results[data-animal="sloth"]   { --rs-wash: #ece9ff; --rs-ray: #d9d3ff; --rs-deep: #6553c4; }
+.results p, .results h1, .results ul { margin: 0; padding: 0; }
+.rs-defs { position: absolute; }
+
+/* ---- hero: the reveal ---- */
+.rs-hero { position: relative; overflow: hidden; display: grid; justify-items: center; gap: 2px;
+  padding: 14px 16px 16px; border-radius: 24px; background: var(--rs-wash); }
+.rs-kicker { font: 800 14px/1.2 var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--rs-deep);
+  position: relative; z-index: 1; }
+.rs-dots i { font-style: normal; display: inline-block; animation: rs-dot .5s 2 both; }
+.rs-dots i:nth-child(2) { animation-delay: .12s; } .rs-dots i:nth-child(3) { animation-delay: .24s; }
+
+.rs-art { position: relative; width: 176px; height: 136px; margin-top: 2px; }
+.rs-art::before { content: ''; position: absolute; left: 50%; top: 54%; width: 330px; height: 330px; margin: -165px 0 0 -165px; border-radius: 50%;
+  background: repeating-conic-gradient(var(--rs-ray) 0 15deg, transparent 15deg 30deg);
+  -webkit-mask: radial-gradient(circle, #000 28%, transparent 66%); mask: radial-gradient(circle, #000 28%, transparent 66%);
+  animation: rs-rays .6s 1.05s cubic-bezier(.2,.9,.3,1.2) both; }
+.rs-art::after { content: ''; position: absolute; left: 50%; top: 54%; width: 132px; height: 132px; margin: -66px 0 0 -66px; border-radius: 50%; background: var(--rs-ray); }
+.rs-pop { position: absolute; inset: 0; z-index: 2; animation: rs-pop .6s 1.05s cubic-bezier(.3,1.5,.5,1) both; }
+.rs-idle { display: block; width: 100%; height: 100%; transform-origin: 50% 90%; animation: rs-bob 3.2s 1.7s ease-in-out infinite; }
+.rs-animal { display: block; width: 100%; height: 100%; overflow: visible; }
+.results[data-animal="giraffe"] .rs-idle { animation-name: rs-wobble; animation-duration: 2.4s; }
+.results[data-animal="penguin"] .rs-idle { animation-name: rs-glide; animation-duration: 3.6s; }
+.results[data-animal="sloth"] .rs-idle { animation-name: rs-sway; animation-duration: 5s; transform-origin: 50% 10%; }
+.rs-zz { animation: rs-zz 2.6s 1.8s ease-in-out infinite; }
+.rs-q { position: absolute; left: 50%; top: 54%; z-index: 3; width: 84px; height: 84px; margin: -42px 0 0 -42px; display: grid; place-items: center;
+  font: 800 64px/1 var(--display); color: var(--rs-deep); opacity: 0; animation: rs-q 1.1s both; }
+.rs-spark { position: absolute; z-index: 1; width: 16px; height: 16px; color: var(--banana); animation: rs-spark .5s 1.35s cubic-bezier(.3,1.6,.5,1) both; }
+.rs-spark svg { display: block; width: 100%; height: 100%; }
+.rs-spark.s1 { left: -6px; top: 22px; } .rs-spark.s2 { right: -10px; top: 8px; width: 22px; height: 22px; animation-delay: 1.45s; }
+.rs-spark.s3 { left: 6px; bottom: 14px; width: 11px; height: 11px; animation-delay: 1.55s; color: #fff; }
+.rs-spark.s4 { right: 0; bottom: 30px; width: 12px; height: 12px; animation-delay: 1.5s; color: #fff; }
+.results[data-animal="monkey"] .rs-spark, .results[data-animal="buddy"] .rs-spark { color: #fff; }
+.results[data-animal="monkey"] .rs-spark.s3, .results[data-animal="buddy"] .rs-spark.s3 { color: var(--banana-deep); }
+
+.rs-words { position: relative; z-index: 1; display: grid; gap: 4px; justify-items: center; min-width: 0; max-width: 100%; }
+.rs-title { display: grid; font: 800 20px/1.1 var(--display); color: var(--ink); }
+.rs-lead { color: var(--rs-deep); animation: rs-rise .35s .5s both; }
+.rs-punch { font-size: 40px; line-height: .98; text-wrap: balance; padding-bottom: 2px; max-width: 100%; overflow-wrap: anywhere;
+  animation: rs-land .5s 1.05s cubic-bezier(.2,.9,.3,1) both; }
+.rs-title.is-long .rs-punch { font-size: 33px; }
+.rs-blurb { max-width: 30ch; font-size: 16px; line-height: 1.3; font-weight: 700; color: var(--ink); opacity: .8; text-wrap: balance; animation: rs-rise .4s 1.5s both; }
+
+/* ---- bananas you can see ---- */
+.rs-score { display: flex; align-items: center; gap: 14px; padding: 10px 14px; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 18px;
+  animation: rs-rise .4s 1.6s both; }
+.rs-count { flex: none; min-width: 62px; display: grid; justify-items: center; }
+.rs-num { font: 800 48px/.9 var(--display); color: var(--banana-deep); font-variant-numeric: tabular-nums; }
+.rs-count span { font: 800 13px/1.2 var(--body); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); }
+.rs-bunch { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(var(--cols, 10), minmax(0, 1fr)); gap: 3px 1px; justify-items: center; }
+.rs-b { position: relative; width: 100%; max-width: 34px; aspect-ratio: 1; }
+.rs-b svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.rs-b-ghost { --b1: var(--mist); --b2: var(--line); --b3: transparent; }
+.rs-b-full { animation: rs-ban .32s calc(1.75s + var(--i) * 45ms) cubic-bezier(.3,1.7,.5,1) both; }
+
+/* ---- five skills at a glance ---- */
+.rs-skills { list-style: none; display: grid; grid-template-columns: repeat(var(--n, 5), minmax(0, 1fr)); gap: 6px; }
+.rs-skill { position: relative; display: grid; justify-items: center; align-content: start; gap: 4px; padding: 8px 2px 8px;
+  border-radius: 16px; background: transparent; cursor: default;
+  --tone: var(--line-deep); --disc: var(--mist); --fg: #93a0bb;
+  animation: rs-rise .4s calc(2s + var(--i) * 70ms) cubic-bezier(.3,1.4,.5,1) both; }
+.rs-skill.is-strong { --tone: var(--great); --disc: var(--great); --fg: #fff; }
+.rs-skill.is-mid { --tone: var(--banana); --disc: #fff3c4; --fg: var(--banana-deep); }
+.rs-skill.is-next { --tone: var(--pick); --disc: var(--pick-wash); --fg: var(--pick); background: var(--pick-wash); }
+.rs-medal { position: relative; width: 48px; height: 48px; }
+.rs-ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.rs-ring circle { fill: none; stroke-width: 5; }
+.rs-ring-track { stroke: var(--mist); }
+.rs-ring-fill { stroke: var(--tone); stroke-linecap: round; animation: rs-ring .7s calc(2.15s + var(--i) * 70ms) ease-out both; }
+.rs-skill.is-zero .rs-ring-fill { stroke: transparent; }
+.rs-disc { position: absolute; inset: 9px; border-radius: 50%; background: var(--disc); color: var(--fg); display: grid; place-items: center; }
+.rs-ico { width: 18px; height: 18px; display: block; }
+.rs-tick { position: absolute; right: -4px; bottom: -3px; width: 20px; height: 20px; border-radius: 50%; background: var(--great-deep); border: 2px solid var(--paper); display: grid; place-items: center; }
+.rs-tick svg { width: 11px; height: 11px; display: block; }
+.rs-skill-name { font: 800 12.5px/1.12 var(--body); color: var(--ink); min-height: 2.24em; display: grid; align-items: center; text-wrap: balance; padding-inline: 1px; }
+.rs-skill.is-low:not(.is-next) .rs-skill-name, .rs-skill.is-none .rs-skill-name { color: var(--ink-soft); }
+.rs-skill.is-none .rs-ring-track { stroke-dasharray: 3 6; stroke: var(--line-deep); }
+.rs-next-tag { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); white-space: nowrap; padding: 3px 7px; border-radius: 99px;
+  background: var(--pick); color: #fff; font: 800 10px/1 var(--body); letter-spacing: .06em; text-transform: uppercase; }
+
+.rs-tip { position: relative; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: var(--pick-wash); text-align: left;
+  animation: rs-rise .4s 2.5s both; }
+.rs-tip::before { content: ''; position: absolute; top: -7px; width: 16px; height: 16px; border-radius: 3px; background: inherit;
+  left: calc((var(--at, 0) + .5) * (100% + 6px) / var(--n, 5) - 3px); transform: translateX(-50%) rotate(45deg); }
+.rs-tip.is-all { background: var(--great-wash); }
+.rs-tip.is-info { background: var(--mist); }
+.rs-tip.is-all::before, .rs-tip.is-info::before { display: none; }
+.rs-tip-face { flex: none; width: 44px; height: 44px; overflow: hidden; display: grid; place-items: center; }
+.rs-tip-face svg { max-width: 100%; max-height: 100%; }
+.rs-tip-text { font-size: 15px; line-height: 1.3; font-weight: 700; color: var(--ink); }
+.rs-tip-k { display: block; margin-bottom: 2px; font: 800 12px/1.2 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--pick); }
+.rs-tip.is-all .rs-tip-k { color: var(--great-deep); }
+.rs-tip.is-info .rs-tip-k { color: var(--ink-soft); }
+
+/* ---- one obvious thing to do ---- */
+.rs-end { display: contents; }
+.rs-cta { position: sticky; bottom: -18px; z-index: 4; margin: -6px 0 -18px; padding: 10px 0 6px;
+  background: linear-gradient(rgba(255,255,255,0), var(--paper) 12px); box-shadow: 0 26px 0 var(--paper); }
+.rs-nudge { display: flex; align-items: center; justify-content: center; gap: 10px; text-align: left; animation: rs-rise .4s 2.6s both; }
+.rs-nudge p { display: grid; line-height: 1.2; }
+.rs-nudge b { font: 800 18px/1.15 var(--display); color: var(--ink); }
+.rs-nudge p span { font-size: 14px; font-weight: 700; color: var(--ink-soft); }
+.rs-sil { position: relative; flex: none; width: 46px; height: 46px; border-radius: 50%; background: var(--mist); display: grid; place-items: center; overflow: hidden; }
+.rs-sil-art { width: 44px; height: 35px; margin-top: 6px; filter: brightness(0); opacity: .2; }
+.rs-sil.is-won { background: #23304f; box-shadow: 0 0 0 3px var(--banana); }
+.rs-sil.is-won .rs-sil-art { filter: none; opacity: 1; }
+.rs-sil b { position: absolute; inset: 0; display: grid; place-items: center; font: 800 24px/1 var(--display); color: var(--ink-soft); }
+.results .rs-go { width: 100%; min-height: 56px; font-size: 18px; }
+.rs-confetti { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 50; pointer-events: none; }
+
+/* ---- 20 of 20: night-sky card, golden monkey, crown drops on, stars keep twinkling ---- */
+.results[data-gold] { --rs-wash: #23304f; --rs-ray: #34477d; --rs-deep: #ffc933; }
+.results[data-gold] .rs-hero { background: radial-gradient(120% 90% at 50% 38%, #2f4079, #1c2743); box-shadow: inset 0 0 0 3px var(--banana); }
+.results[data-gold] .rs-title, .results[data-gold] .rs-blurb { color: #fff; }
+.results[data-gold] .rs-blurb { opacity: .9; }
+.results[data-gold] .rs-art::after { background: #41579a; box-shadow: 0 0 0 6px rgba(255,201,51,.28); }
+.results[data-gold] .rs-art::before { animation: rs-rays .6s 1.05s cubic-bezier(.2,.9,.3,1.2) both, rs-spin 26s 1.7s linear infinite; }
+.results[data-gold] .rs-art { margin-top: 10px; }
+.rs-perfect { display: inline-block; margin-right: 4px; padding: 3px 9px; border-radius: 99px; background: var(--banana); color: #23304f; letter-spacing: .06em; }
+.rs-crown { transform-box: fill-box; transform-origin: 50% 100%; animation: rs-crown .7s 1.5s cubic-bezier(.3,1.5,.5,1) both; }
+.results[data-gold] .rs-spark { color: var(--banana); animation: rs-spark .5s 1.35s cubic-bezier(.3,1.6,.5,1) both, rs-twinkle 1.8s 2s ease-in-out infinite; }
+.results[data-gold] .rs-spark.s3, .results[data-gold] .rs-spark.s4, .results[data-gold] .rs-spark.s6 { color: #fff; }
+.results[data-gold] .rs-spark.s2 { animation-delay: 1.45s, 2.4s; } .results[data-gold] .rs-spark.s3 { animation-delay: 1.55s, 2.9s; }
+.results[data-gold] .rs-spark.s4 { animation-delay: 1.5s, 2.2s; }
+.rs-spark.s5 { left: -34px; top: 70px; width: 13px; height: 13px; animation-delay: 1.6s, 2.6s !important; }
+.rs-spark.s6 { right: -38px; top: 58px; width: 14px; height: 14px; animation-delay: 1.65s, 3.1s !important; }
+.rs-spark.s7 { right: -30px; bottom: 4px; width: 18px; height: 18px; animation-delay: 1.7s, 2.5s !important; }
+.results[data-gold] .rs-num { display: inline-block; animation: rs-gold-num .5s calc(1.75s + 20 * 45ms) cubic-bezier(.3,1.6,.5,1) both; }
+
+/* low scores: the art breathes a little slower and softer — kind, not flashy */
+.results[data-cele="soft"] .rs-art::before { opacity: .7; }
+
+/* ---- roomier on tablet/desktop: art beside the words ---- */
+@media (min-width: 620px) {
+  .results { gap: 14px; }
+  .rs-hero { grid-template-columns: 236px 1fr; grid-template-rows: auto auto; column-gap: 12px; justify-items: start; align-items: center; padding: 18px 24px 18px 12px; text-align: left; }
+  .rs-art { grid-row: 1 / 3; grid-column: 1; width: 236px; height: 184px; margin: 0; }
+  .results[data-gold] .rs-art { margin: 0; }
+  .results[data-gold] .rs-art::after { box-shadow: 0 0 0 4px rgba(255,201,51,.28); width: 168px; height: 168px; margin: -84px 0 0 -84px; }
+  .rs-spark.s5 { left: 2px; top: 96px; } .rs-spark.s6 { right: -4px; top: 84px; } .rs-spark.s7 { right: 10px; bottom: 2px; }
+  .rs-art::after { width: 178px; height: 178px; margin: -89px 0 0 -89px; }
+  .rs-kicker { grid-column: 2; align-self: end; font-size: 15px; }
+  .rs-words { grid-column: 2; align-self: start; justify-items: start; }
+  .rs-title { font-size: 24px; }
+  .rs-punch { font-size: 54px; } .rs-title.is-long .rs-punch { font-size: 44px; }
+  .rs-blurb { font-size: 17px; max-width: 34ch; }
+  .rs-score { padding: 12px 22px; gap: 22px; }
+  .rs-num { font-size: 60px; } .rs-count span { font-size: 14px; }
+  .rs-bunch { gap: 4px 2px; } .rs-b { max-width: 40px; }
+  .rs-spark.s2 { right: 6px; top: 0; }
+  .rs-skills { gap: 10px; }
+  .rs-skill { padding: 12px 6px 10px; }
+  .rs-medal { width: 60px; height: 60px; } .rs-disc { inset: 11px; } .rs-ico { width: 22px; height: 22px; }
+  .rs-skill-name { font-size: 15px; min-height: 0; }
+  .rs-tip { padding: 12px 18px; } .rs-tip-text { font-size: 16px; }
+  .rs-tip::before { left: calc((var(--at, 0) + .5) * (100% + 10px) / var(--n, 5) - 5px); }
+  .rs-end { position: sticky; bottom: -18px; z-index: 4; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 16px;
+    margin-bottom: -18px; padding: 8px 0 6px; background: linear-gradient(rgba(255,255,255,0), var(--paper) 12px); box-shadow: 0 26px 0 var(--paper); }
+  .rs-cta { position: static; margin: 0; padding: 0; background: none; box-shadow: none; }
+  .rs-nudge { justify-content: flex-start; }
+  .results .rs-go { width: auto; min-width: 240px; }
+}
+@media (max-height: 700px) and (max-width: 619px) {
+  .rs-art { width: 150px; height: 116px; }
+  .rs-punch { font-size: 34px; } .rs-title.is-long .rs-punch { font-size: 29px; }
+}
+
+@keyframes rs-dot { 0%, 100% { transform: none; } 50% { transform: translateY(-4px); } }
+@keyframes rs-q { 0% { opacity: 0; transform: scale(.4); } 18% { opacity: 1; transform: scale(1.1) rotate(-8deg); } 45% { opacity: 1; transform: scale(1) rotate(8deg); } 80% { opacity: 1; transform: scale(1.05) rotate(-6deg); } 100% { opacity: 0; transform: scale(1.5); } }
+@keyframes rs-pop { from { opacity: 0; transform: scale(.2) rotate(-14deg); } 30% { opacity: 1; } }
+@keyframes rs-rays { from { opacity: 0; transform: scale(.3) rotate(-40deg); } }
+/* lands by growing UP to full size (never past it), so it can't poke out of the card on a phone */
+@keyframes rs-land { from { opacity: 0; transform: scale(.55) translateY(10px); } 45% { opacity: 1; } }
+@keyframes rs-crown { from { opacity: 0; transform: translateY(-46px) rotate(24deg) scale(1.3); } 55% { opacity: 1; } }
+@keyframes rs-spin { to { transform: rotate(360deg); } }
+@keyframes rs-twinkle { 0%, 100% { transform: none; opacity: 1; } 50% { transform: scale(.45) rotate(45deg); opacity: .5; } }
+@keyframes rs-gold-num { 0% { transform: none; } 50% { transform: scale(1.25) rotate(-6deg); } 100% { transform: none; } }
+@keyframes rs-rise { from { opacity: 0; transform: translateY(12px); } }
+@keyframes rs-spark { from { opacity: 0; transform: scale(0) rotate(-90deg); } }
+@keyframes rs-ban { from { opacity: 0; transform: scale(.1) rotate(-50deg); } }
+@keyframes rs-ring { from { stroke-dashoffset: var(--c); } }
+@keyframes rs-bob { 0%, 100% { transform: none; } 50% { transform: translateY(-4px) rotate(1.5deg); } }
+@keyframes rs-wobble { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(4deg); } }
+@keyframes rs-glide { 0%, 100% { transform: translateX(-7px) rotate(-2deg); } 50% { transform: translateX(7px) rotate(2deg); } }
+@keyframes rs-sway { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+@keyframes rs-zz { 0%, 100% { opacity: .35; transform: translateY(3px); } 50% { opacity: 1; transform: translateY(-3px); } }
+
+</style>
+</head>
+<body>
+<div id="tio" data-screen="start">
+  <header id="tio-top"></header>
+  <main id="tio-stage"></main>
+  <footer id="tio-dock"></footer>
+</div>
+<script>
+/* PIECE E — scene writing. Owns: SKILLS, SCENES, TITLES.
+   Shape is a contract with the other pieces; add optional fields freely, don't rename existing ones.
+   Word budgets (hard): setting ≤ 9 · says ≤ 9 · reply text ≤ 8 · act ≤ 4 · why ≤ 12 (one idea) · tip ≤ 9 · blurb ≤ 10.
+   Whole pre-tap screen (setting + says + three replies with their DO lines) ≤ 40 words.
+   who.mood: happy | sad | smirk | angry | curious | stern | excited | embarrassed.
+   reply.vibe: kind | blunt | gush | mumble | joke | snap | calm | rush | shrug | curious. It is how the reply FEELS
+     to the person saying it, never a verdict: every vibe in use sits on both best and wrong replies, and the
+     gentle rounds use only kind | calm | mumble | curious. (`snap` is allowed but unused: a comeback feels great.)
+   reply.back (optional, ≤ 4 words): what the other person says straight after this reply. reply.backMood: their
+     face then (same list as who.mood). Quiet and never punishing in the gentle rounds.
+   scene.tone: 'gentle' on the two loss rounds (quiet feedback, no fanfare).
+   In a round either all three replies have an `act` or none do. */
+window.TIO = window.TIO || {};
+
+/* Names must make sense cold on the start-screen chips. Tips are shown once, the first time a skill is met,
+   so each is plain (no image) and true for both rounds of its skill. */
+TIO.SKILLS = {
+  real:     { name: 'Be real',          tip: 'Say true things kindly. No fibs, no faking.' },
+  present:  { name: 'Eyes up',          tip: 'Screen away. Eyes on the person talking.' },
+  well:     { name: 'Say less',         tip: 'Say a little. They can ask for more.' },
+  comfort:  { name: 'Be there',         tip: 'Say it’s unfair. Or just do something kind.' },
+  cool:     { name: 'Stay cool',        tip: 'Wait five seconds. Then ask a calm question.' }
+};
+
+/* rating: 'great' (2 bananas) | 'ok' (1) | 'oops' (0). Each scene needs exactly one of each.
+   Order: light and funny first; the two loss rounds are 4 and 7 with two light rounds between; a win to finish.
+   After Check any reply's `why` can be opened, picked or not, so every `why` describes the REPLY (never "you said…"),
+   stands on its own and explains any image it uses. Wrong `act` lines must sound sensible to the kid doing them. */
+TIO.SCENES = [
+  { id: 'haircut', skill: 'real',
+    who: { name: 'Maya', face: '👧', color: '#ffb4a2', mood: 'happy' },
+    setting: 'Maya cut her own fringe. It’s very short.',
+    says: 'Do you love it?',
+    replies: [
+      { text: 'It’s so YOU! Love how happy you are.', rating: 'great', vibe: 'gush',
+        why: 'All true and all kind. No fib needed.',
+        back: 'Aww, thanks!', backMood: 'happy' },
+      { text: 'I LOVE it! Best fringe ever!', rating: 'ok', vibe: 'kind',
+        why: 'Kind, but a fib. Fibs make real compliments worth less.',
+        back: 'Really? Best EVER?', backMood: 'curious' },
+      { text: 'Um… it’s a bit wonky.', rating: 'oops', vibe: 'blunt',
+        why: 'True, but ouch. Being real doesn’t mean being rude.',
+        back: 'Oh.', backMood: 'sad' }
+    ] },
+  { id: 'rocket', skill: 'present',
+    who: { name: 'Sam', face: '👦', color: '#ffd166', mood: 'excited' },
+    setting: 'You’re mid-game. Little brother Sam bursts in.',
+    says: 'LOOK! My rocket took a HUNDRED years!',
+    replies: [
+      { act: 'Tablet face-down.', text: 'Whoa! How does it fly?', rating: 'great', vibe: 'curious',
+        why: 'Tablet down, eyes on Sam. Like a tight string between you.',
+        back: 'It flies SO high!', backMood: 'excited' },
+      { act: 'Hold up one finger.', text: 'One sec. Nearly finished!', rating: 'ok', vibe: 'rush',
+        why: 'Honest! But Sam’s big moment is right now.',
+        back: '…Okay.', backMood: 'sad' },
+      { act: 'Turn the sound off.', text: 'Mm-hm. Cool. I’m listening.', rating: 'oops', vibe: 'calm',
+        why: 'Sound off, but eyes still on the game. Sam can tell.',
+        back: 'You’re not looking!', backMood: 'sad' }
+    ] },
+  { id: 'book', skill: 'well',
+    who: { name: 'Zara', face: '👩', color: '#cdb4db', mood: 'curious' },
+    setting: 'Reading time. Zara points at your book.',
+    says: 'What’s that one about?',
+    replies: [
+      { text: 'A kid finds a dragon egg. Then chaos.', rating: 'great', vibe: 'joke',
+        why: 'Short and fun. Now Zara can ask for more.',
+        back: 'Ooh! What chaos?', backMood: 'excited' },
+      { text: 'Dunno. It’s good. You’d like it.', rating: 'ok', vibe: 'shrug',
+        why: 'Short is good! But it gives Zara nothing fun to picture.',
+        back: 'Good how?', backMood: 'curious' },
+      { text: 'So there’s this kid, and his uncle, and…', rating: 'oops', vibe: 'gush',
+        why: 'Words gushing like a waterfall. People stop listening.',
+        back: 'Um. Never mind.', backMood: 'embarrassed' }
+    ] },
+  { id: 'biscuit', skill: 'comfort', tone: 'gentle',
+    who: { name: 'Priya', face: '😢', color: '#bde0fe', mood: 'sad' },
+    setting: 'Break time. Priya holds a photo of her dog.',
+    says: 'Biscuit died yesterday.',
+    replies: [
+      { text: 'That’s so unfair. Biscuit was the best.', rating: 'great', vibe: 'mumble',
+        why: 'Says it’s unfair and uses Biscuit’s name. That helps.',
+        back: 'He really was.', backMood: 'happy' },
+      { text: 'Don’t be sad! Want to play football?', rating: 'ok', vibe: 'kind',
+        why: 'A kind idea. Priya needs to be sad for a bit first.',
+        back: 'Maybe later.', backMood: 'sad' },
+      { text: 'At least you can get a new one.', rating: 'oops', vibe: 'calm',
+        why: 'Meant kindly. But a new dog isn’t Biscuit.',
+        back: 'I want Biscuit.', backMood: 'sad' }
+    ] },
+  { id: 'show', skill: 'real',
+    who: { name: 'Theo', face: '🧒', color: '#a2d2ff', mood: 'excited' },
+    setting: 'Everyone loves Sock Wizards. You think it’s boring.',
+    says: 'Sock Wizards is the BEST. Right?',
+    replies: [
+      { text: 'Not my thing. Who’s your favourite wizard?', rating: 'great', vibe: 'kind',
+        why: 'Honest and still friendly. Friends trust that.',
+        back: 'Sockrates. Obviously!', backMood: 'happy' },
+      { text: 'Um… yeah, it’s okay I guess.', rating: 'ok', vibe: 'mumble',
+        why: 'A small fib. Small fibs need more fibs later.',
+        back: 'Just okay?!', backMood: 'curious' },
+      { text: 'YES! Obsessed! Seen every episode!', rating: 'oops', vibe: 'gush',
+        why: 'Faking it means more faking. Friends can usually tell.',
+        back: 'Favourite episode? Go!', backMood: 'excited' }
+    ] },
+  { id: 'buzz', skill: 'present',
+    who: { name: 'Leo', face: '🧑', color: '#b8e0d2', mood: 'embarrassed' },
+    setting: 'Leo’s mid-story. Your phone buzzes.',
+    says: 'I called Mr Hill “Mum”. In front of EVERYONE.',
+    replies: [
+      { act: 'Let it buzz.', text: 'NO. What did he say?!', rating: 'great', vibe: 'rush',
+        why: 'The buzz can wait. Leo’s story can’t.',
+        back: 'He said “Yes, dear”!', backMood: 'happy' },
+      { act: 'Quick look, then back.', text: 'Sorry! Go on, go on.', rating: 'ok', vibe: 'curious',
+        why: 'Polite. But one glance is enough to miss the best bit.',
+        back: 'Um. Where was I?', backMood: 'embarrassed' },
+      { act: 'Peek under the table.', text: 'Keep going, I’m listening.', rating: 'oops', vibe: 'calm',
+        why: 'Hiding the phone doesn’t hide it. Leo sees the eyes drop.',
+        back: 'Never mind.', backMood: 'sad' }
+    ] },
+  { id: 'notes', skill: 'comfort', tone: 'gentle',
+    who: { name: 'Ava', face: '😔', color: '#d8e2dc', mood: 'sad' },
+    setting: 'Ava’s back at school. Her grandad died.',
+    says: 'I missed a whole week.',
+    replies: [
+      { text: 'That’s so hard. Here, I copied my notes.', rating: 'great', vibe: 'calm',
+        why: 'Doesn’t wait to be asked. Just does the helpful thing.',
+        back: 'Oh. Thank you.', backMood: 'happy' },
+      { text: 'Tell me if you need anything, okay?', rating: 'ok', vibe: 'kind',
+        why: 'Kind! But now Ava has to work out what to ask.',
+        back: 'Okay. Thanks.', backMood: 'sad' },
+      { text: 'At least you missed the maths test!', rating: 'oops', vibe: 'mumble',
+        why: 'Meant kindly. But it skips past how sad Ava feels.',
+        back: '…Yeah. I guess.', backMood: 'sad' }
+    ] },
+  { id: 'homework', skill: 'well',
+    who: { name: 'Ms Okoye', face: '👩‍🏫', color: '#f6bd60', mood: 'stern' },
+    setting: 'Ms Okoye stops at your desk.',
+    says: 'So. Where’s your homework?',
+    replies: [
+      { act: 'One slow breath.', text: 'I left it at home. Tomorrow, promise.', rating: 'great', vibe: 'blunt',
+        why: 'Breath first, then short and true. That sounds calm.',
+        back: 'Tomorrow it is.', backMood: 'happy' },
+      { act: 'Answer straight away.', text: 'Sorry sorry sorry! I forgot!', rating: 'ok', vibe: 'rush',
+        why: 'True and short! A breath first would sound calmer.',
+        back: 'Okay, okay. Tomorrow.', backMood: 'stern' },
+      { act: 'Explain it properly.', text: 'Well, my sister had football, then the dog—', rating: 'oops', vibe: 'joke',
+        why: 'A waterfall of reasons. The real answer gets lost.',
+        back: 'The short version?', backMood: 'stern' }
+    ] },
+  { id: 'shoes', skill: 'cool',
+    who: { name: 'Dex', face: '😏', color: '#ffadad', mood: 'smirk' },
+    setting: 'Dex smirks at your shoes. Kids watch.',
+    says: 'Nice shoes. Did your grandma pick them?',
+    replies: [
+      { act: 'Count to five.', text: 'Huh? Say that again.', rating: 'great', vibe: 'shrug',
+        why: 'Buys a calm second. Mean words sound meaner said twice.',
+        back: 'Uh… never mind.', backMood: 'embarrassed' },
+      { act: 'Shrug it off.', text: 'Yeah, okay. Whatever.', rating: 'ok', vibe: 'blunt',
+        why: 'Calm, nice. But Dex never hears how mean it sounded.',
+        back: 'Ha. Thought so.', backMood: 'smirk' },
+      { act: 'Make everyone laugh.', text: 'At least mine don’t smell like yours!', rating: 'oops', vibe: 'joke',
+        why: 'A comeback is what Dex wanted. Now it’s a show.',
+        back: 'Oh, it’s ON.', backMood: 'angry' }
+    ] },
+  { id: 'match', skill: 'cool',
+    who: { name: 'Riley', face: '😠', color: '#ffc6ff', mood: 'angry' },
+    setting: 'You lost by one goal. Riley storms over.',
+    says: 'You’re the reason we lost!',
+    replies: [
+      { act: 'Go quiet first.', text: 'Whoa. Did you mean that to sting?', rating: 'great', vibe: 'curious',
+        why: 'A calm question. Hardly anyone wants to be the mean one.',
+        back: '…No. Sorry.', backMood: 'embarrassed' },
+      { act: 'Walk away.', text: 'Whatever. Don’t care.', rating: 'ok', vibe: 'shrug',
+        why: 'No shouting, good. But the mean words just sit there.',
+        back: 'Ugh. Fine.', backMood: 'angry' },
+      { act: 'Stand up for yourself.', text: 'No, YOU are! You missed three!', rating: 'oops', vibe: 'gush',
+        why: 'Shouting back starts a shouting match. Nobody wins those.',
+        back: 'Oh yeah?!', backMood: 'angry' }
+    ] }
+];
+
+/* Final titles, matched on bananas out of 20 (highest `min` that fits wins).
+   Pattern: "As ___ as a ___" with an animal the results screen can draw (monkey, penguin, parrot, giraffe, sloth).
+   Each blurb is true for its whole band: 20 · 18–19 · 14–17 · 10–13 · 6–9 · 0–5. */
+TIO.TITLES = [
+  { min: 20, title: 'As golden as a royal cheeky monkey',      blurb: 'Every single banana. The whole jungle bows.' },
+  { min: 18, title: 'As fluent as a cheeky monkey',            blurb: 'You swing through tricky chats like vines.' },
+  { min: 14, title: 'As smooth as a penguin on a water slide', blurb: 'Mostly whoosh, a few wobbles. Smooth sliding!' },
+  { min: 10, title: 'As chatty as a parrot at a party',        blurb: 'Plenty of words! Next: picking the best ones.' },
+  { min: 6,  title: 'As wobbly as a giraffe on roller skates', blurb: 'Wobbly, but still rolling. Skates get easier.' },
+  { min: 0,  title: 'As sleepy as a sloth on a Monday',        blurb: 'Slow start. Sloths get there. Have another go!' }
+];
+
+/* PIECE C — lesson chrome and flow. Owns: start screen, top bar (quit, progress, banana count, streak), round-to-round transitions.
+   Public: TIO.chrome.start(S), TIO.chrome.topbar(S), TIO.chrome.after(S, root, changed),
+           TIO.chrome.mascot(mood, size)  -> SVG string, moods: happy | cheer | oops | think (head only, square)
+           TIO.chrome.banana(size)        -> SVG string, a single banana
+   The top bar string is deliberately constant for a whole game, so the engine never replaces its DOM;
+   progress, banana count, streak and the little rider are updated in after(), which lets them animate. */
+(function () {
+  var T = window.TIO = window.TIO || {};
+  var FUR = '#9a623c', FUR_D = '#74452a', FACE = '#ffdcb0', EAR = '#f4b78a', INK = '#23304f', MOUTH = '#6b2533';
+
+  /* ---------- art ---------- */
+  var FACES = {
+    happy:
+      '<path d="M37 44q8-5 15-1M68 41q8-6 16 0" fill="none" stroke="' + FUR_D + '" stroke-width="3" stroke-linecap="round"/>' +
+      '<g class="mk-eyes"><ellipse cx="45" cy="57" rx="5.5" ry="7.5" fill="' + INK + '"/><ellipse cx="75" cy="57" rx="5.5" ry="7.5" fill="' + INK + '"/>' +
+      '<circle cx="47" cy="54" r="2.2" fill="#fff"/><circle cx="77" cy="54" r="2.2" fill="#fff"/></g>' +
+      '<path d="M45 77Q62 98 76 74Q60 83 45 77Z" fill="' + MOUTH + '" stroke="' + MOUTH + '" stroke-width="2" stroke-linejoin="round"/>',
+    cheer:
+      '<path d="M37 59q8-12 16 0M67 59q8-12 16 0" fill="none" stroke="' + INK + '" stroke-width="4.5" stroke-linecap="round"/>' +
+      '<path d="M43 74Q60 104 77 74Z" fill="' + MOUTH + '" stroke="' + MOUTH + '" stroke-width="2" stroke-linejoin="round"/>' +
+      '<path d="M53 85Q60 80 67 85Q60 91 53 85Z" fill="#ff8597"/>' +
+      '<path class="mk-spark" d="M9 8l2.4 6.6L18 17l-6.6 2.4L9 26l-2.4-6.6L0 17l6.600-2.4z" fill="#ffc933"/>' +
+      '<path class="mk-spark" d="M110 2l1.9 5.100 5.100 1.900-5.100 1.900-1.900 5.100-1.900-5.100-5.100-1.900 5.100-1.900z" fill="#ffc933"/>',
+    oops:
+      '<path d="M35 47l16-5M69 42l16 5" fill="none" stroke="' + FUR_D + '" stroke-width="3" stroke-linecap="round"/>' +
+      '<circle cx="45" cy="58" r="8.5" fill="#fff"/><circle cx="75" cy="58" r="8.5" fill="#fff"/>' +
+      '<circle cx="46" cy="60" r="3.6" fill="' + INK + '"/><circle cx="74" cy="60" r="3.6" fill="' + INK + '"/>' +
+      '<path d="M48 85q4-5 8 0t8 0t8 0" fill="none" stroke="' + INK + '" stroke-width="3.5" stroke-linecap="round"/>' +
+      '<path d="M101 10c4 6 6.500 9.500 6.500 13a6.500 6.500 0 0 1-13 0c0-3.500 2.500-7 6.500-13z" fill="#7cc8ff"/>',
+    think:
+      '<path d="M37 46h14M68 41q8-6 16 0" fill="none" stroke="' + FUR_D + '" stroke-width="3" stroke-linecap="round"/>' +
+      '<circle cx="45" cy="58" r="8" fill="#fff"/><circle cx="75" cy="58" r="8" fill="#fff"/>' +
+      '<circle cx="48" cy="54.500" r="3.600" fill="' + INK + '"/><circle cx="78" cy="54.500" r="3.600" fill="' + INK + '"/>' +
+      '<path d="M53 83q8 4 15-3" fill="none" stroke="' + INK + '" stroke-width="3.5" stroke-linecap="round"/>' +
+      '<circle cx="104" cy="20" r="5" fill="#c9d3e6"/><circle cx="114" cy="8" r="3" fill="#c9d3e6"/>'
+  };
+  function head(mood) {
+    return '<g class="mk-head">' +
+      '<circle cx="18" cy="60" r="16" fill="' + FUR + '"/><circle cx="18" cy="60" r="9" fill="' + EAR + '"/>' +
+      '<circle cx="102" cy="60" r="16" fill="' + FUR + '"/><circle cx="102" cy="60" r="9" fill="' + EAR + '"/>' +
+      '<path d="M50 24q2-15 12-12q-3 4-1 8q7-8 13-2q-7 2-9 9z" fill="' + FUR + '"/>' +
+      '<ellipse cx="60" cy="61" rx="41" ry="42" fill="' + FUR + '"/>' +
+      '<path d="M60 40c-8-12-34-8-34 12c0 10 5 16 8 20c-3 16 10 28 26 28s29-12 26-28c3-4 8-10 8-20c0-20-26-24-34-12z" fill="' + FACE + '"/>' +
+      '<circle cx="35" cy="76" r="6" fill="#ff8f7a" opacity=".5"/><circle cx="85" cy="76" r="6" fill="#ff8f7a" opacity=".5"/>' +
+      '<circle cx="56" cy="70" r="1.800" fill="' + FUR_D + '"/><circle cx="64" cy="70" r="1.800" fill="' + FUR_D + '"/>' +
+      FACES[mood] + '</g>';
+  }
+  function mascot(mood, size) {
+    mood = FACES[mood] ? mood : 'happy'; size = +size || 96;
+    return '<svg class="mk mk-' + mood + '" width="' + size + '" height="' + size + '" viewBox="0 0 120 120" aria-hidden="true" focusable="false">' + head(mood) + '</svg>';
+  }
+  var BANANA = '<path d="M8 5c-2 13 6 23 20 22c1.500-1 1.500-2.500 0-3.500c-8 .5-14-6-14.500-18c-2-1.500-4-1.500-5.500-.5z" fill="#ffc933" stroke="#e0a800" stroke-width="1.6" stroke-linejoin="round"/>' +
+    '<path d="M8.200 5.200l.6-3.400l3.600.4l1 3.300z" fill="#74452a"/><path d="M11.500 10c1 8 5 13 12 14.500" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".55"/>';
+  function banana(size) {
+    size = +size || 24;
+    return '<svg class="ico-banana" width="' + size + '" height="' + size + '" viewBox="0 0 32 32" aria-hidden="true" focusable="false">' + BANANA + '</svg>';
+  }
+  var FLAME = '<svg class="ico-flame" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+    '<path d="M13 1.500c.5 4.500 6 6.500 6 12.500a7 7 0 0 1-14 0c0-3.200 1.800-4.800 2.300-7.500c1.700.8 2.700 2 2.900 3.800c1.500-2 2.900-4.800 2.800-8.800z" fill="#ff7a1a"/>' +
+    '<path d="M12 12c.4 2 2.800 2.900 2.800 5.300a2.800 2.800 0 0 1-5.600 0c0-2 1.800-2.800 2.800-5.300z" fill="#ffd34d"/></svg>';
+  /* whole monkey for the start screen: sits, waves, holds a banana */
+  function hero() {
+    return '<svg class="mk mk-hero" viewBox="-18 0 236 212" aria-hidden="true" focusable="false">' +
+      '<ellipse cx="100" cy="203" rx="58" ry="7" fill="#23304f" opacity=".1"/>' +
+      '<path class="mk-tail" d="M72 180C28 186 10 150 32 138C47 130 56 147 43 153" fill="none" stroke="' + FUR + '" stroke-width="9" stroke-linecap="round"/>' +
+      '<g class="mk-wave"><path d="M74 150Q44 146 36 112" fill="none" stroke="' + FUR + '" stroke-width="12" stroke-linecap="round"/><circle cx="35" cy="107" r="10" fill="' + FACE + '"/></g>' +
+      '<ellipse cx="100" cy="162" rx="35" ry="33" fill="' + FUR + '"/><ellipse cx="100" cy="166" rx="21" ry="22" fill="' + FACE + '"/>' +
+      '<ellipse cx="78" cy="195" rx="16" ry="9" fill="' + FACE + '"/><ellipse cx="122" cy="195" rx="16" ry="9" fill="' + FACE + '"/>' +
+      '<g class="mk-bob" transform="translate(40 20)">' + head('happy') + '</g>' +
+      '<g class="mk-hold"><path d="M126 152Q162 158 178 130" fill="none" stroke="' + FUR + '" stroke-width="12" stroke-linecap="round"/>' +
+      '<g transform="translate(183 100) rotate(58) scale(1.9)"><g transform="translate(-16 -16)">' + BANANA + '</g></g>' +
+      '<circle cx="179" cy="127" r="10" fill="' + FACE + '"/></g>' +
+      '</svg>';
+  }
+
+  /* ---------- screens ---------- */
+  var TILT = [-3, 2, -1.5, 3, -2];
+  function start() {
+    var skills = Object.keys(T.SKILLS || {}).map(function (k, n) {
+      return '<li class="sticker sticker-' + (n % 5) + '" style="--tilt:' + TILT[n % 5] + 'deg;--n:' + n + '">' + T.SKILLS[k].name + '</li>';
+    }).join('');
+    var rounds = (T.SCENES || []).length || 10, max = T.MAX || rounds * 2;
+    return '<section class="start">' +
+      '<div class="start-hero">' +
+        '<p class="start-bubble">Bet you can’t grab all <b>' + max + '</b> bananas!</p>' +
+        '<div class="start-monkey">' + hero() + '</div>' +
+      '</div>' +
+      '<h1 class="start-title">Talk It <span>Out</span></h1>' +
+      '<p class="start-sub">' + rounds + ' tricky moments. What would <em>you</em> say?</p>' +
+      '<button class="btn btn-go" data-act="start">Start</button>' +
+      (skills ? '<ul class="start-skills" aria-label="Superpowers you will pick up">' + skills + '</ul>' : '') +
+      '</section>';
+  }
+  function topbar() {
+    var n = (T.SCENES || []).length;
+    return '<div class="topbar">' +
+      '<button class="topbar-quit" type="button" data-chrome="quit" aria-label="Quit game">' +
+        '<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 3l14 14M17 3L3 17" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></svg></button>' +
+      '<div class="progress" role="progressbar" aria-label="Rounds done" aria-valuemin="0" aria-valuemax="' + n + '" aria-valuenow="0">' +
+        '<div class="progress-track"><div class="progress-fill"></div></div>' +
+        '<div class="progress-lane"><div class="progress-rider"></div></div>' +
+      '</div>' +
+      '<div class="topbar-streak" hidden>' + FLAME + '<b></b></div>' +
+      '<div class="topbar-count">' + banana(28) + '<b>0</b></div>' +
+      '</div>' +
+      '<div class="quit" hidden>' +
+        '<div class="quit-card" role="alertdialog" aria-modal="true" aria-labelledby="quit-h" aria-describedby="quit-p">' +
+          '<div class="quit-art">' + mascot('oops', 104) + '</div>' +
+          '<h2 class="quit-head" id="quit-h">Leave already?</h2>' +
+          '<p class="quit-text" id="quit-p"></p>' +
+          '<button class="btn quit-stay" type="button" data-chrome="stay">Keep playing</button>' +
+          '<button class="btn quit-leave" type="button" data-act="home">Leave</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  /* ---------- live updates ---------- */
+  var prev = null, lastKey = null, opener = null;
+  function $(sel) { var top = document.getElementById('tio-top'); return top && top.querySelector(sel); }
+  function calm() { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } }
+  function replay(el, cls) { if (!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+  function floatPlus(host, n) {
+    if (!host || calm()) return;
+    var chip = document.createElement('span');
+    chip.className = 'topbar-plus'; chip.setAttribute('aria-hidden', 'true'); chip.textContent = '+' + n;
+    host.appendChild(chip);
+    setTimeout(function () { if (chip.parentNode) chip.parentNode.removeChild(chip); }, 1100);
+  }
+
+  function after(S, root, ch) {
+    var stage = document.getElementById('tio-stage');
+    var key = S.screen + ':' + (S.screen === 'play' ? S.i : '');
+    if (stage && ch.stage) {
+      /* only a new round / new screen arrives; a pick or check re-render of the same round must not replay it */
+      stage.classList.remove('is-arriving');
+      if (key !== lastKey) {
+        stage.scrollTop = 0;
+        if (S.screen !== 'start') { void stage.offsetWidth; stage.classList.add('is-arriving'); }
+        if (!stage.__tioArrive) {
+          stage.__tioArrive = true;
+          stage.addEventListener('animationend', function (e) { if (e.animationName === 'stage-arrive') stage.classList.remove('is-arriving'); });
+        }
+      }
+    }
+    lastKey = key;
+    if (S.screen !== 'play') { prev = null; opener = null; return; }
+
+    var bar = $('.topbar'); if (!bar) return;
+    var prog = $('.progress'), fill = $('.progress-fill'), rider = $('.progress-rider');
+    var count = $('.topbar-count'), streak = $('.topbar-streak');
+    var n = T.SCENES.length, done = S.i + (S.checked ? 1 : 0), pct = done / n * 100;
+    var fresh = ch.top || !prev, snap = fresh || Math.abs(done - prev.done) > 1;
+
+    if (snap) bar.classList.add('is-snap');
+    fill.style.width = pct + '%'; rider.style.left = pct + '%';
+    prog.setAttribute('aria-valuenow', done);
+    if (snap) { void bar.offsetWidth; bar.classList.remove('is-snap'); }
+    else if (done > prev.done) replay(prog, 'is-bump');
+
+    if (fresh || S.bananas !== prev.bananas) {
+      count.querySelector('b').textContent = S.bananas;
+      count.setAttribute('aria-label', S.bananas + (S.bananas === 1 ? ' banana' : ' bananas'));
+      if (!snap && S.bananas > prev.bananas) { replay(count, 'is-bump'); floatPlus(count, S.bananas - prev.bananas); }
+    }
+
+    var hot = S.streak >= 2;
+    if (fresh || S.streak !== prev.streak) {
+      streak.hidden = !hot;
+      if (hot) {
+        streak.querySelector('b').textContent = S.streak;
+        streak.setAttribute('aria-label', S.streak + ' great answers in a row');
+        if (!snap) replay(streak, 'is-bump');
+      }
+    }
+
+    var rating = S.checked && S.picked != null ? T.reply(S.picked).rating : null;
+    var gentle = T.cur && T.cur() && T.cur().tone === 'gentle';
+    var mood = rating ? (gentle ? 'happy' : rating === 'great' ? 'cheer' : rating === 'oops' ? 'oops' : 'happy') : S.picked != null ? 'think' : 'happy';
+    if (fresh || mood !== prev.mood) {
+      rider.innerHTML = mascot(mood, 40);
+      if (!snap && rating) replay(rider, rating === 'oops' ? 'is-shake' : 'is-hop');
+    }
+    prev = { done: done, bananas: S.bananas, streak: S.streak, mood: mood };
+  }
+
+  /* ---------- quit confirm (in-page, no confirm()) ---------- */
+  function quitBox() { return $('.quit'); }
+  function quitOpen() { var q = quitBox(); return !!q && !q.hidden; }
+  function openQuit() {
+    var S = T.state, q = quitBox(); if (!S || S.screen !== 'play' || !q) return;
+    if (!S.bananas && !S.i && !S.checked) { T.actions.home(); return; }   /* nothing to lose yet */
+    var p = q.querySelector('.quit-text');
+    p.textContent = S.bananas ? 'You’ll lose your ' + S.bananas + (S.bananas === 1 ? ' banana.' : ' bananas.') : 'You’ll lose your spot.';
+    opener = document.activeElement;
+    q.hidden = false;
+    var stay = q.querySelector('.quit-stay'); if (stay) stay.focus();
+  }
+  function closeQuit() {
+    var q = quitBox(); if (!q || q.hidden) return;
+    q.hidden = true;
+    var back = opener && document.contains(opener) ? opener : $('.topbar-quit');
+    opener = null; if (back && back.focus) back.focus();
+  }
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest ? e.target.closest('[data-chrome]') : null;
+    if (el) { if (el.getAttribute('data-chrome') === 'quit') openQuit(); else closeQuit(); return; }
+    if (e.target.classList && e.target.classList.contains('quit')) closeQuit();   /* tap outside the card */
+  });
+  /* capture phase: while the confirm is open the engine must not see Enter / 1-3 */
+  window.addEventListener('keydown', function (e) {
+    if (quitOpen()) {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeQuit(); return; }
+      if (e.key === 'Tab') {
+        var f = quitBox().querySelectorAll('button'), first = f[0], last = f[f.length - 1], a = document.activeElement;
+        if (e.shiftKey && (a === first || !quitBox().contains(a))) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && (a === last || !quitBox().contains(a))) { e.preventDefault(); first.focus(); }
+      }
+      e.stopPropagation();   /* focused button still gets its native Enter / Space click */
+      return;
+    }
+    if (e.key === 'Escape' && T.state && T.state.screen === 'play') { e.preventDefault(); openQuit(); }
+  }, true);
+
+  T.chrome = { start: start, topbar: topbar, after: after, mascot: mascot, banana: banana };
+})();
+
+/* PIECE A — scene screen. Owns: the skill tag, the setting line, the speaker (a drawn character) and their speech bubble,
+   the reply cards (idle / picked / checked states). Each card leads with a drawn "how you'd say it" face (reply.vibe)
+   on its own colour, so the three choices are three different objects. After Check the cards stay tappable (peek).
+   Also exports TIO.sceneView.character(who, mood) -> inline SVG string, in case another piece wants the same face. */
+window.TIO = window.TIO || {};
+(function () {
+  /* ---------- character generator ---------- */
+  var SKIN = ['#ffdcc2', '#f7c8a0', '#e9ad80', '#cc8f62', '#a86d46', '#80502f'];
+  var HAIR = ['#2b1d1a', '#4a2c20', '#7a4a2a', '#b8652e', '#e2a93b', '#d9482f', '#1f2a44'];
+  var SHIRT = ['#3b82f6', '#1fa97a', '#ef6f6c', '#8b5cf6', '#ff9f1c', '#23304f', '#14a3b8', '#e0568a'];
+  var BACKS = ['none', 'bob', 'long', 'puffs', 'pony', 'pigtails', 'none', 'bun'];
+  var FRONTS = ['round', 'fringe', 'side', 'spiky', 'curly', 'quiff', 'part', 'buzz'];
+  var INK = '#2a2036';
+
+  /* The ten cast members get hand-picked looks so no two are alike; any other name falls through to the hash. */
+  var CAST = {
+    'maya':      { skin: 2, hair: 1, back: 'bob',      front: 'fringe', shirt: 2, extra: ['clip'] },
+    'theo':      { skin: 0, hair: 3, back: 'none',     front: 'curly',  shirt: 1, extra: ['freckles'] },
+    'sam':       { skin: 1, hair: 4, back: 'none',     front: 'spiky',  shirt: 4, extra: ['tooth'], head: 'round' },
+    'leo':       { skin: 3, hair: 0, back: 'none',     front: 'quiff',  shirt: 6 },
+    'zara':      { skin: 4, hair: 0, back: 'puffs',    front: 'round',  shirt: 7, extra: ['band'] },
+    'ms okoye':  { skin: 5, hair: 0, back: 'bun',      front: 'part',   shirt: 5, extra: ['glasses', 'earrings', 'collar'], head: 'tall' },
+    'priya':     { skin: 3, hair: 0, back: 'long',     front: 'part',   shirt: 3, extra: ['braid'] },
+    'ava':       { skin: 0, hair: 4, back: 'pony',     front: 'side',   shirt: 0 },
+    'dex':       { skin: 1, hair: 2, back: 'none',     front: 'side',   shirt: 5, extra: ['cap'], head: 'square' },
+    'riley':     { skin: 0, hair: 5, back: 'pigtails', front: 'round',  shirt: 2, extra: ['sweatband', 'freckles'] }
+  };
+
+  function hash(s) { var h = 5381; for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return h; }
+  function shade(hex, f) {
+    var n = parseInt(hex.slice(1), 16);
+    return '#' + [n >> 16, n >> 8 & 255, n & 255].map(function (v) {
+      v = Math.round(f <= 1 ? v * f : v + (255 - v) * (f - 1));
+      return ('0' + Math.max(0, Math.min(255, v)).toString(16)).slice(-2);
+    }).join('');
+  }
+  function lookFor(name) {
+    var key = String(name || '').toLowerCase().replace(/\./g, '').replace(/\s+/g, ' ').trim(), c = CAST[key], h = hash(key || 'someone');
+    var adult = /^(ms|mrs|mr|miss|dr|coach|sir|madam)\b/.test(key);
+    var d = {
+      skin: h % SKIN.length, hair: (h >>> 3) % HAIR.length, back: BACKS[(h >>> 6) % BACKS.length],
+      front: FRONTS[(h >>> 9) % FRONTS.length], shirt: (h >>> 12) % SHIRT.length,
+      head: adult ? 'tall' : ['oval', 'round', 'square'][(h >>> 15) % 3],
+      extra: adult ? ['glasses', 'collar'] : (h >>> 17) % 4 === 0 ? ['freckles'] : []
+    };
+    if (adult) { d.front = ['part', 'side', 'round', 'buzz'][(h >>> 9) % 4]; d.back = ['none', 'bun', 'bob', 'none'][(h >>> 6) % 4]; }
+    if (c) for (var k in c) d[k] = c[k];
+    return d;
+  }
+
+  var MOODS = { happy: 1, sad: 1, smirk: 1, angry: 1, curious: 1, stern: 1, excited: 1, embarrassed: 1 };
+  var EMOJI_MOOD = { '😢': 'sad', '😔': 'sad', '😞': 'sad', '😭': 'sad', '😏': 'smirk', '😠': 'angry', '😡': 'angry', '🤔': 'curious', '😳': 'embarrassed', '😬': 'embarrassed', '😃': 'excited', '😄': 'excited', '🤩': 'excited' };
+  function moodFor(sc) {
+    var w = sc.who || {};
+    if (MOODS[w.mood]) return w.mood;
+    if (EMOJI_MOOD[w.face]) return EMOJI_MOOD[w.face];
+    if (/🏫/.test(w.face || '')) return 'stern';
+    var s = String(sc.says || '');
+    if (/laughed at me|died|don.t know where|^…/.test(s)) return 'sad';
+    if (/!/.test(s)) return 'excited';
+    if (/\?\s*$/.test(s)) return 'curious';
+    return 'happy';
+  }
+
+  function hairBack(kind) {
+    switch (kind) {
+      case 'bob': return '<path d="M26 62Q25 26 60 26Q95 26 94 62V82Q94 93 84 93H36Q26 93 26 82Z"/>';
+      case 'long': return '<path d="M24 62Q23 25 60 25Q97 25 96 62V124H24Z"/>';
+      case 'puffs': return '<circle cx="30" cy="36" r="16"/><circle cx="90" cy="36" r="16"/>';
+      case 'bun': return '<circle cx="60" cy="20" r="13"/>';
+      case 'pony': return '<path d="M82 32Q106 30 105 58Q104 80 93 88Q98 64 86 50Z"/>';
+      case 'pigtails': return '<path d="M30 52Q12 54 13 74Q14 88 22 90Q30 80 32 64Z"/><path d="M90 52Q108 54 107 74Q106 88 98 90Q90 80 88 64Z"/>';
+    }
+    return '';
+  }
+  function hairFront(kind) {
+    switch (kind) {
+      case 'fringe': return '<path d="M32 63Q28 27 60 27Q92 27 88 63Q88 51 84 48Q60 52 36 48Q32 51 32 63Z"/>';
+      case 'side': return '<path d="M32 63Q27 26 60 26Q94 26 88 63Q89 50 79 42Q60 55 35 47Q32 54 32 63Z"/>';
+      case 'spiky': return '<path d="M32 60L28 38L39 43L41 24L52 36L60 19L68 36L79 24L81 43L92 38L88 60Q85 46 60 45Q35 46 32 60Z"/>';
+      case 'curly': return '<path d="M32 60Q30 30 60 30Q90 30 88 60Q85 46 60 46Q35 46 32 60Z"/>' +
+        '<circle cx="35" cy="46" r="10"/><circle cx="43" cy="33" r="11"/><circle cx="58" cy="27" r="11"/><circle cx="73" cy="30" r="11"/><circle cx="84" cy="41" r="10"/><circle cx="50" cy="42" r="8"/><circle cx="68" cy="42" r="8"/>';
+      case 'quiff': return '<path d="M32 61Q29 42 38 33Q42 17 66 19Q86 20 89 40Q90 50 88 61Q85 45 70 43Q50 48 36 44Q32 50 32 61Z"/>';
+      case 'part': return '<path d="M32 64Q28 27 60 27Q92 27 88 64Q87 48 60 36Q33 48 32 64Z"/>';
+      case 'buzz': return '<path d="M33 57Q31 31 60 31Q89 31 87 57Q84 42 60 41Q36 42 33 57Z"/>';
+    }
+    return '<path d="M32 61Q29 27 60 27Q91 27 88 61Q86 46 60 45Q34 46 32 61Z"/>';
+  }
+
+  function eye(x, y, ry, look) {
+    return '<ellipse cx="' + x + '" cy="' + y + '" rx="4.4" ry="' + ry + '" fill="' + INK + '"/>' +
+      '<circle cx="' + (x + 1.4 + (look || 0)) + '" cy="' + (y - ry * 0.38) + '" r="1.6" fill="#fff"/>';
+  }
+  function stroke(d, w) { return '<path d="' + d + '" fill="none" stroke="' + INK + '" stroke-width="' + (w || 3) + '" stroke-linecap="round" stroke-linejoin="round"/>'; }
+
+  function faceFor(mood, skin) {
+    var eyes, brows, mouth, extra = '', cheek = '#ff8f8f', cheekO = 0.38;
+    switch (mood) {
+      case 'excited':
+        eyes = eye(48, 62, 6.2) + eye(72, 62, 6.2);
+        brows = stroke('M42 50Q48 45 54 49', 2.6) + stroke('M66 49Q72 45 78 50', 2.6);
+        mouth = '<path d="M48 73H72Q72 88 60 88Q48 88 48 73Z" fill="#7a2338"/><path d="M51 73H69V76.5Q60 78 51 76.5Z" fill="#fff"/><ellipse cx="60" cy="84.5" rx="5.5" ry="2.6" fill="#ff8b94"/>';
+        break;
+      case 'sad':
+        eyes = eye(48, 64, 5, -0.6) + eye(72, 64, 5, -0.6);
+        brows = stroke('M42 56L54 51', 2.8) + stroke('M66 51L78 56', 2.8);
+        mouth = stroke('M52 81Q60 74 68 81');
+        extra = '<path d="M43 70Q39 77 43 79.5Q47 77 43 70Z" fill="#5db8ff"/>';
+        cheekO = 0.25;
+        break;
+      case 'angry':
+        eyes = eye(48, 64, 4.2) + eye(72, 64, 4.2);
+        brows = stroke('M41 52L55 58', 3.6) + stroke('M65 58L79 52', 3.6);
+        mouth = stroke('M52 82Q60 74 68 82', 3.4);
+        extra = '<path d="M86 30l5-7M92 36l8-3M90 42l7 2" stroke="#e5484d" stroke-width="3" stroke-linecap="round" fill="none"/>';
+        cheek = '#ff5a5a'; cheekO = 0.5;
+        break;
+      case 'smirk':
+        eyes = eye(48, 63, 5.2, 1) + eye(72, 63, 5.2, 1) + '<rect x="42" y="56" width="12" height="5.5" fill="' + skin + '"/><rect x="66" y="56" width="12" height="3.5" fill="' + skin + '"/>';
+        brows = stroke('M42 55L54 56', 2.8) + stroke('M66 51Q72 46 79 50', 2.8);
+        mouth = stroke('M52 77Q62 81 70 73', 3.2);
+        break;
+      case 'curious':
+        eyes = eye(49, 62, 5.8, 1.2) + eye(73, 62, 5.8, 1.2);
+        brows = stroke('M42 53Q48 50 54 53', 2.6) + stroke('M66 48Q72 43 79 47', 2.6);
+        mouth = stroke('M53 76Q61 82 68 75');
+        break;
+      case 'embarrassed':
+        /* cringing: eyes squeezed shut, teeth-gritting wobbly mouth, hot cheeks, one bead of sweat — no tears */
+        eyes = stroke('M43 59L53 63.5L43 68', 3.2) + stroke('M77 59L67 63.5L77 68', 3.2);
+        brows = stroke('M42 54Q48 49 55 51', 2.6) + stroke('M65 51Q72 49 78 54', 2.6);
+        mouth = '<path d="M49 76Q54.500 73 60 75.500Q65.500 73 71 76Q72 82 66 83.500Q60 81.500 54 83.500Q48 82 49 76Z" fill="#fff" stroke="' + INK + '" stroke-width="2.6" stroke-linejoin="round"/>' +
+          '<path d="M55.500 75.500V82.500M60 75.500V82M64.500 75.500V82.500" stroke="' + INK + '" stroke-width="1.5" stroke-linecap="round"/>';
+        extra = '<g stroke="#e5484d" stroke-width="1.7" stroke-linecap="round" opacity=".75"><path d="M35.500 75l2.500-5M39.500 76l2.500-5M43.500 75l2.500-5M75 75l2.500-5M79 76l2.500-5M83 75l2.500-5"/></g>' +
+          '<path d="M89 40Q84.500 48 89 50.500Q93.500 48 89 40Z" fill="#5db8ff"/>';
+        cheek = '#ff5a6e'; cheekO = 0.62;
+        break;
+      case 'soft':
+        /* gentle scenes: the sad face eased — no tear, relaxed brows, a small smile. Never a grin. */
+        eyes = eye(48, 63.5, 5, -0.3) + eye(72, 63.5, 5, -0.3);
+        brows = stroke('M42 54.5Q48 51.5 54 52.5', 2.6) + stroke('M66 52.5Q72 51.5 78 54.5', 2.6);
+        mouth = stroke('M53.5 77Q60 82 66.5 77');
+        cheekO = 0.32;
+        break;
+      case 'stern':
+        eyes = eye(48, 63, 4.8) + eye(72, 63, 4.8);
+        brows = stroke('M41 54L54 55', 3) + stroke('M66 55L79 54', 3);
+        mouth = stroke('M52 78Q60 76 68 78');
+        cheekO = 0.2;
+        break;
+      default:
+        eyes = eye(48, 62, 5.4) + eye(72, 62, 5.4);
+        brows = stroke('M42 52Q48 49 54 52', 2.6) + stroke('M66 52Q72 49 78 52', 2.6);
+        mouth = stroke('M50 74Q60 85 70 74');
+    }
+    var cr = mood === 'embarrassed' ? 8 : 5.5;
+    return '<circle cx="40" cy="73" r="' + cr + '" fill="' + cheek + '" opacity="' + cheekO + '"/><circle cx="80" cy="73" r="' + cr + '" fill="' + cheek + '" opacity="' + cheekO + '"/>' +
+      '<g class="char-eyes">' + eyes + '</g>' + brows + mouth + extra;
+  }
+
+  function character(who, mood) {
+    who = who || {};
+    var L = lookFor(who.name), skin = SKIN[L.skin], hair = HAIR[L.hair], shirt = SHIRT[L.shirt];
+    var ex = {}; (L.extra || []).forEach(function (e) { ex[e] = 1; });
+    var id = 'tioc' + hash(String(who.name || 'x')).toString(36);
+    var bg = who.color || '#ffe08a';
+    var head = L.head === 'round' ? '<rect x="33" y="35" width="54" height="53" rx="26.5"/>'
+      : L.head === 'square' ? '<rect x="34" y="34" width="52" height="54" rx="19"/>'
+      : L.head === 'tall' ? '<rect x="35" y="32" width="50" height="58" rx="24"/>'
+      : '<rect x="34" y="34" width="52" height="54" rx="24"/>';
+    var tilt = mood === 'curious' ? 'rotate(-5 60 90)' : mood === 'sad' ? 'translate(0 3) rotate(4 60 90)' : mood === 'smirk' ? 'rotate(5 60 90)' : mood === 'excited' ? 'translate(0 -2)' : mood === 'embarrassed' ? 'translate(0 4) rotate(-4 60 90)' : mood === 'soft' ? 'translate(0 1) rotate(2 60 90)' : '';
+    var s = '<svg class="char-svg" viewBox="0 0 120 124" xmlns="http://www.w3.org/2000/svg" focusable="false">' +
+      '<defs><clipPath id="' + id + '"><path d="M-20 -20H140V66H114A54 54 0 0 1 6 66H-20Z"/></clipPath></defs>' +
+      '<circle cx="60" cy="66" r="54" fill="' + bg + '"/>' +
+      '<circle cx="34" cy="40" r="20" fill="#fff" opacity=".22"/><circle cx="96" cy="92" r="9" fill="#fff" opacity=".2"/>' +
+      '<g clip-path="url(#' + id + ')"><g class="char-body">' +
+      '<g' + (tilt ? ' transform="' + tilt + '"' : '') + '>' +
+      '<g fill="' + hair + '">' + hairBack(L.back) + '</g>' +
+      '</g>' +
+      '<path d="M12 126Q12 99 42 96H78Q108 99 108 126Z" fill="' + shirt + '"/>' +
+      (ex.collar ? '<path d="M46 96L60 108L74 96L80 100L66 114H54L40 100Z" fill="#fff"/>' : '<path d="M47 96Q60 108 73 96Z" fill="' + shade(shirt, 0.82) + '"/>') +
+      '<path d="M52 82H68V96Q60 104 52 96Z" fill="' + shade(skin, 0.86) + '"/>' +
+      '<g' + (tilt ? ' transform="' + tilt + '"' : '') + '>' +
+      '<g fill="' + skin + '"><circle cx="33" cy="64" r="6.5"/><circle cx="87" cy="64" r="6.5"/>' + head + '</g>' +
+      (ex.earrings ? '<circle cx="31.5" cy="72" r="2.6" fill="#ffc933"/><circle cx="88.5" cy="72" r="2.6" fill="#ffc933"/>' : '') +
+      (ex.freckles ? '<g fill="' + shade(skin, 0.72) + '"><circle cx="42" cy="69" r="1.1"/><circle cx="46" cy="71" r="1.1"/><circle cx="74" cy="71" r="1.1"/><circle cx="78" cy="69" r="1.1"/><circle cx="60" cy="68" r="1"/></g>' : '') +
+      faceFor(mood, skin) +
+      (ex.tooth && mood === 'excited' ? '<rect x="57" y="73" width="6" height="5" fill="#7a2338"/>' : '') +
+      '<g fill="' + hair + '">' + hairFront(L.front) + '</g>' +
+      (ex.clip ? '<rect x="73" y="40" width="12" height="5" rx="2.5" fill="#ffc933" transform="rotate(24 79 42)"/>' : '') +
+      (ex.band ? '<path d="M31 50Q60 32 89 50L88 44Q60 26 32 44Z" fill="#ffc933"/>' : '') +
+      (ex.sweatband ? '<path d="M32 50Q60 40 88 50V43Q60 33 32 43Z" fill="#fff"/><path d="M32 47.5Q60 37.5 88 47.5" stroke="#3b82f6" stroke-width="2" fill="none"/>' : '') +
+      (ex.cap ? '<path d="M30 46Q30 20 60 20Q90 20 90 46Z" fill="#e5484d"/><path d="M28 44H92Q108 44 110 51Q96 50 86 50H28Z" fill="#b93338"/><circle cx="60" cy="21" r="3" fill="#b93338"/>' : '') +
+      (ex.glasses ? '<g fill="#fff" fill-opacity=".28" stroke="#23304f" stroke-width="2.4"><rect x="38.5" y="54" width="19" height="16" rx="7"/><rect x="62.5" y="54" width="19" height="16" rx="7"/></g><path d="M57.5 61Q60 59 62.5 61" stroke="#23304f" stroke-width="2.4" fill="none"/>' : '') +
+      (ex.braid ? '<g fill="' + hair + '"><ellipse cx="29" cy="88" rx="7.5" ry="7"/><ellipse cx="30" cy="99" rx="7" ry="6.5"/><ellipse cx="31" cy="109" rx="6.5" ry="6"/></g><rect x="25" y="113" width="12" height="4" rx="2" fill="#ffc933"/>' : '') +
+      '</g></g></g></svg>';
+    return s;
+  }
+
+  /* ---------- small icons ---------- */
+  var SKILL_ICON = {
+    real: '<path fill="currentColor" d="M12 20.5s-7.5-4.7-7.5-10.4a4.2 4.2 0 0 1 7.5-2.6 4.2 4.2 0 0 1 7.5 2.6c0 5.700-7.5 10.4-7.5 10.4z"/>',
+    present: '<path fill="currentColor" fill-rule="evenodd" d="M1.800 12S5.500 5.500 12 5.500 22.200 12 22.200 12 18.500 18.500 12 18.500 1.800 12 1.800 12zM12 8.400a3.600 3.600 0 1 0 0 7.200 3.600 3.600 0 0 0 0-7.200z"/>',
+    well: '<path fill="currentColor" d="M12 2.800s6.400 6.800 6.400 11.400a6.400 6.400 0 0 1-12.800 0C5.600 9.600 12 2.800 12 2.800z"/>',
+    comfort: '<path fill="currentColor" d="M12 3a9.500 9.500 0 0 1 9.500 9.500h-19A9.500 9.500 0 0 1 12 3z"/><path fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" d="M12 12v6.200a2.300 2.300 0 0 1-4.600 0"/>',
+    cool: '<path fill="none" stroke="currentColor" stroke-width="2.600" stroke-linecap="round" d="M12 3v18M4.200 7.500l15.600 9M19.800 7.500l-15.600 9"/>'
+  };
+  var STAR = '<path fill="currentColor" d="M12 2.500l2.900 6 6.600.9-4.800 4.600 1.200 6.500L12 17.400 6.100 20.500l1.200-6.500L2.500 9.400l6.600-.9z"/>';
+  function ico(inner, cls) { return '<svg class="' + cls + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + inner + '</svg>'; }
+  var MARK = {
+    great: '<path fill="none" stroke="currentColor" stroke-width="3.400" stroke-linecap="round" stroke-linejoin="round" d="M5.500 12.500l4.300 4.300 8.700-9.300"/>',
+    best: STAR,
+    ok: '<path fill="none" stroke="currentColor" stroke-width="3.200" stroke-linecap="round" d="M5 13.500q3.500-5 7 0t7-1.500"/>',
+    oops: '<path fill="none" stroke="currentColor" stroke-width="3.400" stroke-linecap="round" d="M6.500 6.500l11 11M17.500 6.500l-11 11"/>'
+  };
+  var MARK_LABEL = { great: 'Great reply', best: 'The best reply', ok: 'Nearly', oops: 'Not this one' };
+
+  /* ---------- "you" faces: one per vibe (how the reply is said). Head colour comes from the card (CSS --face). ---------- */
+  function vl(d, w) { return '<path d="' + d + '" fill="none" stroke="' + INK + '" stroke-width="' + (w || 3) + '" stroke-linecap="round" stroke-linejoin="round"/>'; }
+  function ve(x, y, r, dx, dy) {
+    r = r || 3.5;
+    return '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="' + INK + '"/><circle cx="' + (x + 1.2 + (dx || 0)) + '" cy="' + (y - 1.3 + (dy || 0)) + '" r="' + (r * 0.36).toFixed(1) + '" fill="#fff"/>';
+  }
+  function vbig(x, y, dx, dy) {
+    return '<circle cx="' + x + '" cy="' + y + '" r="5.6" fill="#fff"/><circle cx="' + (x + (dx || 0)) + '" cy="' + (y + (dy || 0)) + '" r="2.9" fill="' + INK + '"/>';
+  }
+  var BLUSH = '<circle cx="13.5" cy="34" r="3.6" fill="#ff5c7a" opacity=".4"/><circle cx="42.500" cy="34" r="3.6" fill="#ff5c7a" opacity=".4"/>';
+  var VIBE = {
+    neutral: function () { return ve(19, 26) + ve(37, 26) + vl('M21 36Q28 41 35 36'); },
+    kind: function () {
+      return BLUSH + vl('M14 27Q19 21 24 27') + vl('M32 27Q37 21 42 27') + vl('M19 35Q28 44 37 35') +
+        '<path class="vf-out" d="M51 12.500c-2.600-3.600-7.500-.6-5.300 3.200 1.100 1.900 3.300 3.300 5.300 4.800 2-1.500 4.200-2.900 5.300-4.800 2.200-3.800-2.700-6.800-5.300-3.200z" fill="#ff5c8a"/>';
+    },
+    /* straight-talking: level look, firm little half-smile */
+    blunt: function () {
+      return ve(19, 27, 3.3) + ve(37, 27, 3.3) + vl('M14 20.500H24', 3) + vl('M32 20.500H42', 3) + vl('M20.500 37Q29 40.500 36 35.500', 3.2);
+    },
+    gush: function () {
+      return BLUSH + ve(18, 24, 5, .4) + ve(38, 24, 5, .4) +
+        '<path d="M17 33H39Q39 46 28 46Q17 46 17 33Z" fill="#7a2338"/><path d="M19.500 33H36.500V36Q28 37.500 19.500 36Z" fill="#fff"/><ellipse cx="28" cy="43" rx="5" ry="2.4" fill="#ff8b94"/>' +
+        '<path class="vf-out" d="M52 4l1.700 4.300 4.300 1.700-4.300 1.700-1.700 4.300-1.700-4.300-4.300-1.700 4.300-1.700zM2.500 40l1.100 2.900 2.900 1.100-2.900 1.100-1.100 2.900-1.100-2.900-2.900-1.100 2.900-1.100z" fill="' + INK + '"/>';
+    },
+    /* mumbly: eyes off to the side, relaxed, a small easy mouth and a trailing "..." */
+    mumble: function () {
+      return ve(21, 27.500, 3.1, 1.3, .4) + ve(39, 27.500, 3.1, 1.3, .4) + vl('M15 21.500Q19.500 20 24 21.500', 2.6) + vl('M33 21.500Q37.500 20 42 21.500', 2.6) +
+        vl('M23 37.500Q28.500 40.500 34 37.500', 2.8) +
+        '<g class="vf-out" fill="' + INK + '"><circle cx="46.500" cy="7" r="2.1"/><circle cx="52.500" cy="7" r="2.1"/><circle cx="58.500" cy="7" r="2.1"/></g>';
+    },
+    joke: function () {
+      return vl('M14 22.500L23 26L14 29.500', 3.2) + ve(38, 26, 3.8) + vl('M33 19Q38 15.500 43 18.500', 2.6) +
+        '<path d="M17 33Q28 37 39 33Q38 45 28 45Q18 45 17 33Z" fill="#7a2338"/><path d="M27 39H37V44.500A5 5 0 0 1 27 44.500Z" fill="#ff8b94" stroke="' + INK + '" stroke-width="1.6"/>';
+    },
+    /* fired up and sure of it: set brows, big confident mouth, a "!" — no fangs, no steam */
+    snap: function () {
+      return ve(19, 27.500, 3.4) + ve(37, 27.500, 3.4) + vl('M13 19.500L24 22', 3.4) + vl('M43 19.500L32 22', 3.4) +
+        '<path d="M18.500 34H37.500Q37 44.500 28 44.500Q19 44.500 18.500 34Z" fill="#7a2338"/><path d="M21 34H35V36.800Q28 38 21 36.800Z" fill="#fff"/>' +
+        '<path class="vf-out" d="M53 3.500V14" stroke="' + INK + '" stroke-width="3.6" stroke-linecap="round" fill="none"/><circle class="vf-out" cx="53" cy="20.500" r="2.200" fill="' + INK + '"/>';
+    },
+    calm: function () {
+      return vl('M14 25Q19 30 24 25') + vl('M32 25Q37 30 42 25') + vl('M22.500 36.500Q28 41 33.500 36.500') +
+        '<path class="vf-out" d="M47 38q5-3.500 8.500 0t-1 4.500M48 46q4-2 7 0" stroke="' + INK + '" stroke-width="2.4" stroke-linecap="round" fill="none" opacity=".75"/>';
+    },
+    /* breezy: wide awake, quick grin, whoosh lines — no sweat */
+    rush: function () {
+      return vbig(19, 26, .8) + vbig(37, 26, .8) + vl('M13 17Q19 13.500 24 16.500', 2.6) + vl('M32 16.500Q37 13.500 43 17', 2.6) +
+        '<path d="M21 36H35Q34.500 44 28 44Q21.500 44 21 36Z" fill="#7a2338"/><path d="M23 36H33V38.200Q28 39.200 23 38.200Z" fill="#fff"/>' +
+        '<path class="vf-out" d="M-3 20h6M-5 29h8M-3 38h6" stroke="' + INK + '" stroke-width="2.6" stroke-linecap="round" fill="none"/>';
+    },
+    /* easy-going: one brow up, lopsided little smile, open hands */
+    shrug: function () {
+      return ve(21, 27, 3.3, 1.200) + ve(39, 27, 3.3, 1.200) + vl('M14 21.500Q19.500 20 24 21.500', 2.8) + vl('M33 18.500Q39 15.500 44 19', 2.8) + vl('M21 37Q29 41 36 36', 3) +
+        '<g class="vf-out"><circle class="vf-hand" cx="-1" cy="44" r="5.500"/><circle class="vf-hand" cx="57" cy="44" r="5.500"/></g>';
+    },
+    curious: function () {
+      return vbig(19, 27, 1.5, -1.5) + vbig(37, 27, 1.5, -1.5) + vl('M13 20Q19 18 24 20', 2.6) + vl('M32 16.500Q38 12.500 44 16', 2.6) +
+        '<ellipse cx="29" cy="40" rx="3.600" ry="3.900" fill="#7a2338"/>' +
+        '<path class="vf-out" d="M48 8.500a4.300 4.300 0 1 1 6.300 3.800c-1.400.8-2 1.500-2 3" stroke="' + INK + '" stroke-width="3" stroke-linecap="round" fill="none"/><circle class="vf-out" cx="52.300" cy="20.500" r="2" fill="' + INK + '"/>';
+    }
+  };
+  /* Gentle (loss) scenes: three quiet, kindly faces with nothing outside the head — no hearts, no beams, no sparkles.
+     Every reply in those scenes is meant kindly, so every face says "I care"; they only differ a little. */
+  var SOFT = [
+    function () { return ve(19, 27, 3.2, 0, .3) + ve(37, 27, 3.2, 0, .3) + vl('M14 20.500Q18.500 16.500 23.500 18', 2.2) + vl('M32.500 18Q37.500 16.500 42 20.500', 2.2) + vl('M23 37Q28 40.500 33 37', 2.8); },
+    function () { return ve(19, 26.500, 3.2, .3) + ve(37, 26.500, 3.2, .3) + vl('M14 19Q19 15.500 24 19', 2.2) + vl('M32 19Q37 15.500 42 19', 2.2) + vl('M22 36.500Q28 41 34 36.500', 2.8); },
+    function () { return ve(20, 27.500, 3.2, .8, .5) + ve(38, 27.500, 3.2, .8, .5) + vl('M15 20.500Q19 17 24 18.500', 2.2) + vl('M33 18.500Q38 17 42 20.500', 2.2) + vl('M23.500 37.500Q28.500 40 33.500 37', 2.8); }
+  ];
+  var SOFT_PREF = { kind: 0, calm: 0, curious: 0, joke: 1, gush: 1, rush: 1, snap: 1, blunt: 2, shrug: 2, mumble: 2 };
+  function softSlots(replies) {
+    var used = {}, out = [];
+    replies.forEach(function (r, i) {
+      var want = SOFT_PREF[r.vibe] != null ? SOFT_PREF[r.vibe] : i % 3, n = 0;
+      while (used[want] && n++ < 3) want = (want + 1) % 3;
+      used[want] = 1; out.push(want);
+    });
+    return out;
+  }
+  function vibeFace(vibe, soft) {
+    var v = VIBE[vibe] ? vibe : 'neutral', isSoft = soft != null && SOFT[soft];
+    return '<svg class="vf vf-' + (isSoft ? 'soft' : v) + '" viewBox="-7 0 70 54" aria-hidden="true" focusable="false">' +
+      '<rect class="vf-edge" x="4" y="7" width="48" height="46" rx="19"/><rect class="vf-head" x="4" y="3" width="48" height="46" rx="19"/>' +
+      '<ellipse cx="17" cy="12.500" rx="7" ry="3.600" fill="#fff" opacity=".4" transform="rotate(-24 17 12.500)"/>' +
+      '<g class="vf-face">' + (isSoft ? SOFT[soft]() : VIBE[v]()) + '</g></svg>';
+  }
+  var ACT_IC = '<svg class="reply-act-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M13.500 2.500L5 13.500h5.500L9.500 21.500 19 10h-5.800z"/></svg>';
+
+  /* ---------- render ---------- */
+  /* How the speaker looks and what they say back once a reply has landed. Uses the reply's optional `back` / `backMood`;
+     without them: great -> happy, ok -> unchanged, oops -> sad (angry if they started out smirking or angry).
+     Gentle scenes never get a grin: anything happy becomes the small soft smile. */
+  function reaction(sc, r, mood) {
+    var gentle = sc.tone === 'gentle', m = r.backMood;
+    if (!MOODS[m]) m = r.rating === 'great' ? 'happy' : r.rating === 'ok' ? mood : (mood === 'smirk' || mood === 'angry') ? 'angry' : 'sad';
+    if (gentle && (m === 'excited' || m === 'happy')) m = 'soft';
+    return { mood: m, says: r.back ? String(r.back) : sc.says, back: !!r.back };
+  }
+
+  /* replies the player has opened since Check, by display position. Reset whenever a round is not yet checked. */
+  var revealed = {};
+
+  function render(S) {
+    var sc = TIO.cur(), sk = TIO.SKILLS[sc.skill] || { name: '' }, mood = moodFor(sc);
+    var anyAct = sc.replies.some(function (r) { return r.act; });
+    var gentle = sc.tone === 'gentle', soft = gentle ? softSlots(sc.replies) : null;
+    if (!S.checked) revealed = {}; else if (S.peek != null) revealed[S.peek] = 1;
+    var shownK = S.checked ? (S.peek == null ? S.picked : S.peek) : null;
+    var re = shownK != null && TIO.reply(shownK) ? reaction(sc, TIO.reply(shownK), mood) : { mood: mood, says: sc.says, back: false };
+    var replies = S.order.map(function (ri, k) {
+      var r = sc.replies[ri], cls = 'reply reply-p' + (k % 3), mark = '', flag = '';
+      var mine = S.picked === k, shown = S.checked && (S.peek == null ? mine : S.peek === k);
+      if (mine) cls += ' is-picked';
+      if (S.checked) {
+        /* own pick wears its rating; a missed best reply stays lit; anything else is neutral until it is peeked,
+           and once peeked it keeps its verdict for the rest of the round */
+        var st = mine ? r.rating : r.rating === 'great' ? 'best' : (revealed[k] ? r.rating : '');
+        if (mine) cls += ' is-' + r.rating;
+        else if (st === 'best') cls += ' is-best';
+        else if (st) cls += ' is-peeked-' + st;
+        else cls += ' is-dim';
+        if (shown) cls += ' is-shown';
+        mark = st
+          ? '<span class="reply-mark" role="img" aria-label="' + MARK_LABEL[st] + '">' + ico(MARK[st], 'reply-mark-ic') + '</span>'
+          : '<span class="reply-mark reply-why" aria-hidden="true">?</span>';
+        if (mine) flag = '<b class="reply-flag">Your pick</b>';
+        else if (st === 'best') flag = '<b class="reply-flag">' + ico(STAR, 'reply-flag-ic') + 'Best reply</b>';
+      }
+      var body = (r.act ? '<span class="reply-act">' + ACT_IC + '<span>' + r.act + '</span></span>' : '') +
+        '<span class="reply-text">' + r.text + '</span>';
+      var attrs = S.checked
+        ? ' data-act="peek" data-k="' + k + '" aria-pressed="' + shown + '"'
+        : ' data-act="pick" data-k="' + k + '" role="radio" aria-checked="' + mine + '"';
+      return '<button type="button" class="' + cls + '" style="--n:' + k + '"' + attrs + '>' +
+        '<span class="reply-face">' + vibeFace(r.vibe, soft ? soft[ri] : null) + '</span>' +
+        '<span class="reply-body">' + body + (S.checked && !shown ? '<span class="scene-sr"> (tap to see why)</span>' : '') + '</span>' + mark + flag +
+        '<span class="reply-key" aria-hidden="true">' + (k + 1) + '</span>' +
+        '</button>';
+    }).join('');
+    var len = String(re.says || '').length;
+    return '<section class="scene' + (S.checked ? ' is-checked' : S.picked != null ? ' has-pick' : '') + (anyAct ? ' has-acts' : '') +
+      '" data-skill="' + sc.skill + '" data-mood="' + mood + '"' + (gentle ? ' data-tone="gentle"' : '') + '>' +
+      '<div class="scene-head">' +
+        '<p class="scene-skill">' + ico(SKILL_ICON[sc.skill] || STAR, 'scene-skill-ic') + '<span class="scene-sr">Skill: </span>' + sk.name + '</p>' +
+        '<p class="scene-setting">' + sc.setting + '</p>' +
+      '</div>' +
+      '<div class="speaker">' +
+        '<div class="char" aria-hidden="true">' + character(sc.who, re.mood) + '</div>' +
+        '<div class="bubble' + (re.back ? ' bubble-back' : '') + (len <= 32 ? ' bubble-short' : len > 56 ? ' bubble-long' : '') + '">' +
+          '<b class="bubble-who">' + sc.who.name + '<span class="scene-sr">' + (re.back ? ' says back:' : ' says:') + '</span></b>' +
+          '<p class="bubble-says"' + (S.checked ? ' aria-live="polite"' : '') + '>' + re.says + '</p>' +
+        '</div>' +
+      '</div>' +
+      '<h2 class="scene-ask">' + (S.checked ? '<span class="scene-sr">Your replies. Tap one to see why.</span>' : 'What do you say?') + '</h2>' +
+      (S.checked
+        ? '<div class="replies" role="group" aria-label="The replies. Tap one to see why.">'
+        : '<div class="replies" role="radiogroup" aria-label="Your reply">') + replies + '</div>' +
+      '</section>';
+  }
+
+  /* ---------- after-draw: entry motion once per round, pick/check pops, focus keeping ---------- */
+  var seen = null, lastPicked = null, lastChecked = false, lastPeek = null, focusK = null;
+  /* capture phase runs before the engine re-draws, so we can note which card had focus */
+  function noteFocus() {
+    var a = document.activeElement, card = a && a.closest ? a.closest('.replies .reply') : null;
+    focusK = card ? card.getAttribute('data-k') : null;
+  }
+  document.addEventListener('click', noteFocus, true);
+  document.addEventListener('keydown', noteFocus, true);
+
+  function after(S, root, ch) {
+    if (S.screen !== 'play') { seen = null; lastPicked = null; lastChecked = false; lastPeek = null; return; }
+    if (!ch || !ch.stage) return;
+    var scene = root.querySelector('.scene');
+    if (!scene) return;
+    var stage = document.getElementById('tio-stage');
+    var key = S.i + '|' + S.order.join('') + '|' + (S.checked ? S.log.length - 1 : S.log.length);
+    var picked = S.picked != null ? scene.querySelector('.reply[data-k="' + S.picked + '"]') : null;
+    var react = false, target = null;
+    if (key !== seen) {
+      seen = key;
+      if (stage) stage.scrollTop = 0;
+      if (S.picked == null && !S.checked) scene.classList.add('is-enter');
+    } else if (S.checked && !lastChecked) {
+      /* the top of the scene has just been compacted so all three cards fit above the feedback sheet: start from the top */
+      if (stage) stage.scrollTop = 0;
+      react = true;
+      if (picked) picked.classList.add('just-checked');
+      var best = scene.querySelector('.reply.is-best');
+      if (best) best.classList.add('just-checked');
+    } else if (S.checked && S.peek !== lastPeek) {
+      var pk = scene.querySelector('.reply[data-k="' + (S.peek == null ? S.picked : S.peek) + '"]');
+      if (pk) pk.classList.add('just-picked');
+      react = true; target = pk;
+    } else if (picked && !S.checked && S.picked !== lastPicked) { picked.classList.add('just-picked'); target = picked; }
+    if (react) { var sp = scene.querySelector('.speaker'); if (sp) sp.classList.add('is-react'); }
+    /* a pick or a peek (mouse or key) always carries focus with it, so only one card can ever look chosen */
+    if (target && document.activeElement !== target) { try { target.focus({ preventScroll: true }); } catch (e) { /* older browsers */ } }
+    /* the stage was re-built, so a focused card is gone: put focus back on the same card */
+    if (!target && focusK != null && !(S.checked && !lastChecked) && (!document.activeElement || document.activeElement === document.body)) {
+      var again = scene.querySelector('.reply[data-k="' + focusK + '"]');
+      if (again) { try { again.focus({ preventScroll: true }); } catch (e) { /* older browsers */ } }
+    }
+    lastPicked = S.picked; lastChecked = S.checked; lastPeek = S.peek;
+  }
+
+  TIO.sceneView = { render: render, after: after, character: character, moodFor: moodFor, vibeFace: vibeFace };
+})();
+
+/* PIECE B — feedback moment. Owns the docked footer: Check before answering; after Check, ONE beat —
+   mood monkey + short verdict (+ banana reward) → one reason line → Continue. Nothing else competes.
+   Peek: after Check the player may tap another reply (state.peek); the reason line then explains THAT reply, the
+   headline becomes a quiet label, and the whole sheet goes neutral (calm monkey, grey-blue wash, navy button, reward
+   pill hidden but its space kept) so nothing about the player's own verdict sticks to a reply they did not choose.
+   Tapping their own reply brings their verdict back.
+   Height: all three reasons are stacked in one grid cell (two invisible), and the quiet foot line is the same in
+   every state of a round, so the sheet is exactly as tall after any peek as it was when it opened.
+   Foot: "Tap a reply to see why" in every outcome; on the first round of each skill the "New skill" tip too, in
+   every outcome. If both do not fit the height budget the tip's label shortens, then the hint gives way; the tip goes last.
+   Gentle scenes (scene.tone === 'gentle'): caring face, quiet words, no sparkle, one soft note.
+   The button is the same element box in every state (no resting transforms), so Check and Continue never move.
+   Sound: tiny Web Audio chime. Silent before a user gesture, under reduced motion, if TIO.muted /
+   TIO.state.muted / TIO.feedback.muted is truthy, or if anything throws. */
+window.TIO = window.TIO || {};
+TIO.feedback = (function () {
+  var HEADS = {
+    great: ['Nailed it!', 'Top banana!', 'Smooth talking!', 'Spot on!'],
+    ok:    ['So close!', 'Nearly there!', 'Good thinking!'],
+    oops:  ['Let’s look at that', 'Ooh, tricky one!', 'Good try!']
+  };
+  var GENTLE = { great: 'That helped.', ok: 'Kind. Almost there.', oops: 'Ouch — that one stings.' };
+  var PEEK = { best: 'Why this one works', other: 'If you said that…' };
+  var HINT = 'Tap a reply to see why';
+  var BUDGET = { phone: 230, wide: 170 };   /* tallest the sheet may ever be, px */
+  var FUR = '#9a6240', SKIN = '#ffd9b0', INK = '#3a2418';
+
+  /* The cheeky monkey. Three playful moods, plus two soft ones for the gentle scenes. */
+  function monkey(mood) {
+    var eyes, mouth, extra = '';
+    var blush = function (o) { return '<circle cx="22" cy="45" r="4" fill="#ff9d8a" opacity="' + o + '"/><circle cx="58" cy="45" r="4" fill="#ff9d8a" opacity="' + o + '"/>'; };
+    if (mood === 'great') {
+      eyes = '<path d="M23.5 36q5.5-8 11 0M45.5 36q5.5-8 11 0" fill="none" stroke="' + INK + '" stroke-width="3.4" stroke-linecap="round"/>';
+      mouth = '<path d="M28 47.5q12 4 24 0q-1 13.5-12 13.5t-12-13.5z" fill="' + INK + '"/>' +
+              '<path d="M33.5 57q6.5-4.5 13 0q-2.5 4-6.5 4t-6.5-4z" fill="#ff8a80"/>';
+      extra = blush('.55');
+    } else if (mood === 'ok') {
+      eyes = '<circle cx="29" cy="35" r="4" fill="' + INK + '"/><circle cx="30.4" cy="33.5" r="1.3" fill="#fff"/>' +
+             '<path d="M45.5 36q5.5-5 11 0" fill="none" stroke="' + INK + '" stroke-width="3.4" stroke-linecap="round"/>';
+      mouth = '<path d="M30 49.5q10 9 20 0" fill="none" stroke="' + INK + '" stroke-width="3.4" stroke-linecap="round"/>';
+      extra = blush('.45');
+    } else if (mood === 'oops') {
+      /* curious, not cross: big eyes looking over at the replies, one brow up, a small thinking mouth */
+      eyes = '<circle cx="29" cy="36" r="5.6" fill="#fff"/><circle cx="51" cy="36" r="5.6" fill="#fff"/>' +
+             '<circle cx="30.8" cy="34.3" r="2.9" fill="' + INK + '"/><circle cx="52.8" cy="34.3" r="2.9" fill="' + INK + '"/>' +
+             '<path d="M44.5 26.5q6-4.5 12-1.5" fill="none" stroke="' + INK + '" stroke-width="2.8" stroke-linecap="round"/>' +
+             '<path d="M23.5 29q5.5-1.5 10 .5" fill="none" stroke="' + INK + '" stroke-width="2.8" stroke-linecap="round"/>';
+      mouth = '<path d="M33 53q6 3.5 13-.5" fill="none" stroke="' + INK + '" stroke-width="3.2" stroke-linecap="round"/>';
+      extra = blush('.3');
+    } else if (mood === 'calm') {
+      /* peeking at another reply: plain round eyes, level little smile — no opinion on show */
+      eyes = '<circle cx="29" cy="36.5" r="3.9" fill="' + INK + '"/><circle cx="51" cy="36.5" r="3.9" fill="' + INK + '"/>' +
+             '<circle cx="30.3" cy="35.1" r="1.3" fill="#fff"/><circle cx="52.3" cy="35.1" r="1.3" fill="#fff"/>';
+      mouth = '<path d="M33.5 51.5q6.5 3.6 13 0" fill="none" stroke="' + INK + '" stroke-width="3" stroke-linecap="round"/>';
+      extra = blush('.35');
+    } else {
+      /* gentle: soft round eyes, brows tipped up in the middle (caring), small warm mouth */
+      eyes = '<circle cx="29" cy="37" r="3.7" fill="' + INK + '"/><circle cx="51" cy="37" r="3.7" fill="' + INK + '"/>' +
+             '<circle cx="30.2" cy="35.7" r="1.25" fill="#fff"/><circle cx="52.2" cy="35.7" r="1.25" fill="#fff"/>' +
+             '<path d="M22.5 30.5q5.5-1 10.5-4.5M57.5 30.5q-5.5-1-10.5-4.5" fill="none" stroke="' + INK + '" stroke-width="2.6" stroke-linecap="round"/>';
+      mouth = mood === 'gentle-oops'
+        ? '<path d="M34.5 53.5q5.5-3 11 0" fill="none" stroke="' + INK + '" stroke-width="3" stroke-linecap="round"/>'
+        : '<path d="M33 51q7 5 14 0" fill="none" stroke="' + INK + '" stroke-width="3" stroke-linecap="round"/>';
+      extra = blush('.5');
+    }
+    return '<svg class="fb-monkey" viewBox="0 0 80 80" aria-hidden="true" focusable="false">' +
+      '<circle cx="12" cy="40" r="11" fill="' + FUR + '"/><circle cx="68" cy="40" r="11" fill="' + FUR + '"/>' +
+      '<circle cx="12" cy="40" r="6" fill="' + SKIN + '"/><circle cx="68" cy="40" r="6" fill="' + SKIN + '"/>' +
+      '<path d="M36 13q2-7 7-6q-2 3 0 6z" fill="' + FUR + '"/>' +
+      '<circle cx="40" cy="40" r="28" fill="' + FUR + '"/>' +
+      '<circle cx="29.5" cy="35" r="12.5" fill="' + SKIN + '"/><circle cx="50.5" cy="35" r="12.5" fill="' + SKIN + '"/>' +
+      '<ellipse cx="40" cy="51" rx="20" ry="14.5" fill="' + SKIN + '"/>' +
+      extra + eyes + mouth + '</svg>';
+  }
+
+  /* Corner badge: tick / step-up arrow / magnifying glass ("let's look") / heart for the gentle scenes. */
+  function badge(kind) {
+    var p = kind === 'great' ? '<path d="M6.5 12.5l4 4 7.5-8.5" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>'
+      : kind === 'ok' ? '<path d="M12 18V7M7 11.5l5-5 5 5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>'
+      : kind === 'heart' ? '<path d="M12 19.2s-7-4.5-7-9.1a3.8 3.8 0 0 1 7-2.1 3.8 3.8 0 0 1 7 2.1c0 4.6-7 9.1-7 9.1z" fill="#fff"/>'
+      : '<circle cx="10.6" cy="10.6" r="4.9" fill="none" stroke="#fff" stroke-width="3"/><path d="M14.6 14.6l4.2 4.2" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/>';
+    return '<svg class="fb-badge" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + p + '</svg>';
+  }
+
+  function banana() {
+    return '<svg class="fb-banana" viewBox="0 0 28 28" aria-hidden="true" focusable="false">' +
+      '<path d="M5.2 5.4c-.9 9.8 6 17.8 16.2 17.4 2.3-.1 3.9-1.4 3.5-2.9-.3-1-1.4-1.3-2.7-1.2C15.5 19.3 10.3 14 9.3 5.3 9.1 3.6 5.4 3.7 5.2 5.4z" fill="#ffc933" stroke="#c98f00" stroke-width="1.6" stroke-linejoin="round"/>' +
+      '<path d="M5.3 5.2c.2-1.5 3.8-1.6 4 .1l-.3-2.5c-.1-.9-3.2-.9-3.4 0z" fill="#7a4a22"/>' +
+      '<path d="M8.5 11c1.8 5.2 6 8.8 11.5 9.6" fill="none" stroke="#fff3c4" stroke-width="1.6" stroke-linecap="round" opacity=".9"/>' +
+      '</svg>';
+  }
+
+  function tap() {
+    return '<svg class="fb-tap" viewBox="0 0 20 20" aria-hidden="true" focusable="false">' +
+      '<path d="M8 10V4.6a1.6 1.6 0 0 1 3.2 0V9l3.6.8c.9.2 1.5 1 1.4 1.9l-.5 3.6c-.2 1.2-1.2 2.1-2.4 2.1H9.9c-.8 0-1.5-.4-2-1L4.6 12c-.5-.7-.3-1.6.4-2 .6-.4 1.4-.3 1.9.3z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
+  }
+
+  function sparks() {
+    var s = '';
+    for (var a = 0; a < 8; a++) s += '<i style="--a:' + (a * 45 + 12) + 'deg;--d:' + (a % 2 ? 40 : 52) + 'px"></i>';
+    return '<span class="fb-sparks" aria-hidden="true">' + s + '</span>';
+  }
+
+  function render(S) {
+    if (!S.checked) {
+      var ready = S.picked != null;
+      return '<div class="dock dock-check ' + (ready ? 'is-ready' : 'is-idle') + '"><div class="dock-in"><div class="dock-row">' +
+        '<p class="dock-hint" aria-hidden="true">' + (ready ? 'Happy with it?' : 'Pick the reply you’d say') + '</p>' +
+        '<button class="btn btn-check" data-act="check"' + (ready ? '' : ' disabled') + '>Check</button>' +
+        '</div></div></div>';
+    }
+    var sc = TIO.cur(), mine = TIO.reply(S.picked), m = mine.rating, pts = TIO.PTS[m];
+    var peeking = S.peek != null && S.peek !== S.picked;
+    var shown = (peeking && TIO.reply(S.peek)) || mine;
+    var gentle = sc.tone === 'gentle';
+    var sk = TIO.SKILLS[sc.skill] || {};
+    var last = S.i >= TIO.SCENES.length - 1;
+
+    var nanas = '';
+    for (var b = 0; b < pts; b++) nanas += '<span class="fb-nana" style="--n:' + b + '">' + banana() + '</span>';
+    var reward = pts
+      ? '<span class="fb-reward" role="img" aria-label="plus ' + pts + (pts === 1 ? ' banana' : ' bananas') + '">' +
+          '<b class="fb-plus" aria-hidden="true">+' + pts + '</b>' + nanas + '</span>'
+      : '';
+    var head = peeking
+      ? '<h3 class="verdict-head verdict-peek" id="tio-fb-h">' + (shown.rating === 'great' ? PEEK.best : PEEK.other) + '</h3>'
+      : '<h3 class="verdict-head" id="tio-fb-h">' + (gentle ? GENTLE[m] : HEADS[m][S.i % HEADS[m].length]) + '</h3>';
+
+    /* every reason sits in the same grid cell; only the shown one is visible — the cell is always as tall as the tallest */
+    var whys = '';
+    for (var k = 0; k < S.order.length; k++) {
+      var r = TIO.reply(k), on = r === shown;
+      whys += '<p class="verdict-why' + (on ? '" id="tio-fb-w"' : ' is-ghost" aria-hidden="true"') + '>' + (r.why || '') + '</p>';
+    }
+
+    /* the quiet foot line is the same for the whole round: skill tip on a skill's first round, and the peek hint */
+    var first = !!sk.tip;
+    for (var j = 0; j < S.i; j++) if (TIO.SCENES[j].skill === sc.skill) first = false;
+    var foot = '<div class="fb-foot">' +
+      (first ? '<p class="fb-tip"><b>New skill</b><span>' + sk.tip + '</span></p>' : '') +
+      '<p class="fb-hint">' + tap() + '<span>' + HINT + '</span></p></div>';
+
+    var skin = peeking ? 'peek' : m;
+    var face = peeking ? 'calm' : gentle ? (m === 'oops' ? 'gentle-oops' : 'gentle') : m;
+    var mark = peeking ? 'look' : gentle && m !== 'oops' ? 'heart' : m;
+    return '<div class="dock dock-fb dock-' + skin + (gentle ? ' is-gentle' : '') + (peeking ? ' is-peek' : '') + '"><div class="dock-in"><div class="dock-row">' +
+      '<div class="fb-body">' +
+        '<div class="fb-icon">' + (m === 'great' && !gentle && !peeking ? sparks() : '') +
+          '<span class="fb-disc">' + monkey(face) + '</span><span class="fb-badge-wrap">' + badge(mark) + '</span></div>' +
+        '<div class="verdict">' +
+          '<div class="verdict-top">' + head + reward + '</div>' +
+          '<div class="fb-whys">' + whys + '</div>' +
+          foot +
+        '</div>' +
+      '</div>' +
+      '<button class="btn btn-next" data-act="next" aria-describedby="tio-fb-h tio-fb-w">' + (last ? 'See my title' : 'Continue') + '</button>' +
+      '</div></div></div>';
+  }
+
+  /* ---- sound: generated, quiet, and never allowed to break the game ---- */
+  var gestured = false, ctx = null;
+  function mark() { gestured = true; }
+  try {
+    window.addEventListener('pointerdown', mark, true);
+    window.addEventListener('keydown', mark, true);
+  } catch (e) {}
+  function mq(q) { try { return !!(window.matchMedia && window.matchMedia(q).matches); } catch (e) { return false; } }
+  var TUNES = {
+    great:  [[659.25, 0, .16, .11], [783.99, .09, .16, .11], [1046.5, .18, .34, .12]],
+    ok:     [[523.25, 0, .16, .09], [659.25, .11, .28, .09]],
+    oops:   [[392, 0, .22, .06], [440, .14, .30, .05]],   /* a small "hm?" that turns up, not a buzzer */
+    gentle: [[440, 0, .5, .05]]
+  };
+  function chime(m) {
+    try {
+      if (!gestured || mq('(prefers-reduced-motion: reduce)') || TIO.muted || (TIO.state && TIO.state.muted) || TIO.feedback.muted) return;
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      ctx = ctx || new AC();
+      if (ctx.state === 'suspended' && ctx.resume) { var p = ctx.resume(); if (p && p.catch) p.catch(function () {}); }
+      var t0 = ctx.currentTime + .02;
+      (TUNES[m] || []).forEach(function (n) {
+        var o = ctx.createOscillator(), g = ctx.createGain(), t = t0 + n[1];
+        o.type = m === 'great' ? 'triangle' : 'sine';
+        o.frequency.setValueAtTime(n[0], t);
+        g.gain.setValueAtTime(0.01, t);
+        g.gain.exponentialRampToValueAtTime(n[3], t + .015);
+        g.gain.exponentialRampToValueAtTime(0.01, t + n[2]);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(t); o.stop(t + n[2] + .03);
+      });
+    } catch (e) {}
+  }
+
+  /* Keep the sheet inside its height budget. Runs on every re-draw of the sheet and always lands on the same answer for a
+     round (nothing it measures changes between peeks), so the height it settles on at arrival is the height for the round. */
+  function fit(dock, root) {
+    try {
+      var hint = dock.querySelector('.fb-hint'), tip = dock.querySelector('.fb-tip');
+      if (hint && !root.querySelector('#tio-stage [data-act="peek"]')) hint.hidden = true;   /* nothing to tap: don't promise it */
+      var max = mq('(max-width: 600px)') ? BUDGET.phone : BUDGET.wide;
+      var over = function () { return dock.offsetHeight > max; };
+      if (tip && over()) tip.classList.add('is-tight');                                      /* label shrinks to "New": often saves a line */
+      if (tip && hint && !hint.hidden && over()) { tip.classList.remove('is-tight'); hint.hidden = true; }   /* the takeaway outranks the hint */
+      if (tip && over()) tip.classList.add('is-tight');
+      if (tip && over()) tip.hidden = true;
+      if (hint && !hint.hidden && dock.offsetHeight > max) hint.hidden = true;
+      /* headline and reward pill share one line: if a headline is ever too long for it, step the type down */
+      var h = dock.querySelector('.verdict-head');
+      if (h) for (var n = 0, px = parseFloat(getComputedStyle(h).fontSize); n < 8 && px > 14 && h.scrollWidth > h.clientWidth + 1; n++)
+        h.style.fontSize = (px -= 1) + 'px';
+    } catch (e) {}
+  }
+
+  /* capture phase runs before the engine re-draws: remember whether focus was on our button */
+  var focusInDock = false;
+  function noteFocus() {
+    try { var a = document.activeElement; focusInDock = !!(a && a.closest && a.closest('#tio-dock')); } catch (e) { focusInDock = false; }
+  }
+  try {
+    document.addEventListener('click', noteFocus, true);
+    document.addEventListener('keydown', noteFocus, true);
+  } catch (e) {}
+
+  var wasChecked = false;
+  function after(S, root, changed) {
+    try {
+      var now = S.screen === 'play' && S.checked;
+      if (changed && changed.dock && now) {
+        var dock = root.querySelector('#tio-dock .dock-fb'), btn = root.querySelector('#tio-dock .btn-next');
+        if (dock) fit(dock, root);
+        if (!wasChecked) {
+          /* arrival: the only time the sheet animates, chimes, or takes focus */
+          if (dock) dock.classList.add('is-arriving');
+          if (btn) { try { btn.focus({ preventScroll: true }); } catch (e) { btn.focus(); } }
+          var r = TIO.reply(S.picked);
+          if (r) chime(TIO.cur().tone === 'gentle' ? 'gentle' : r.rating);
+        } else if (btn && focusInDock && (!document.activeElement || document.activeElement === document.body)) {
+          /* a peek re-drew the sheet; if focus was on Continue it fell off the page — put it back; never take it from a card */
+          try { btn.focus({ preventScroll: true }); } catch (e) {}
+        }
+      }
+      wasChecked = now;
+    } catch (e) {}
+  }
+
+  return { HEAD: { great: HEADS.great[0], ok: HEADS.ok[0], oops: HEADS.oops[0] }, render: render, after: after, muted: false };
+})();
+
+/* PIECE D — results screen. Owns: the final score, the cheeky title, the per-skill breakdown, play again.
+   render(S) is pure (same state -> same string). All motion is CSS that starts from a "from" keyframe, so with
+   reduced motion the markup already shows the final state. after() adds the count-up and the confetti burst. */
+window.TIO = window.TIO || {};
+(function () {
+  var T = window.TIO;
+
+  /* ---------- little drawing helpers ---------- */
+  function eye(x, y, r) {
+    return '<ellipse cx="' + x + '" cy="' + y + '" rx="' + r + '" ry="' + (r * 1.2).toFixed(1) + '" fill="#2a2233"/>' +
+      '<circle cx="' + (x + r * 0.35).toFixed(1) + '" cy="' + (y - r * 0.5).toFixed(1) + '" r="' + (r * 0.38).toFixed(1) + '" fill="#fff"/>';
+  }
+  function cheeks(x1, x2, y, r) {
+    return '<circle cx="' + x1 + '" cy="' + y + '" r="' + r + '" fill="#ff8fa3" opacity=".55"/><circle cx="' + x2 + '" cy="' + y + '" r="' + r + '" fill="#ff8fa3" opacity=".55"/>';
+  }
+  var BAN = '<path d="M5.200 4.300C4.600 12.600 10.400 19.600 19 19.900c1.700.100 2.700-1.500 1.700-2.700C15.500 16.300 11 12.400 9.200 5.100 8.900 3.800 7.800 3.200 6.700 3.300 5.900 3.400 5.300 3.600 5.200 4.300z" fill="var(--b1,#ffc933)"/>' +
+    '<path d="M5 4.700 5.200 2.300 7.700 2 8 4z" fill="var(--b2,#8a5a3c)"/>' +
+    '<path d="M7 7.500c1 4.500 4 8.300 8.500 10" fill="none" stroke="var(--b3,#ffe894)" stroke-width="1.300" stroke-linecap="round"/>';
+
+  /* ---------- the animals (viewBox 0 0 200 160, flat shapes, no outlines) ---------- */
+  var ART = {
+    monkey:
+      '<path d="M136 150C176 152 184 112 166 105c-12-4-17 11-5 14" fill="none" stroke="#8a5a3c" stroke-width="10" stroke-linecap="round"/>' +
+      '<path d="M52 162c0-30 20-44 48-44s48 14 48 44z" fill="#8a5a3c"/>' +
+      '<ellipse cx="100" cy="160" rx="25" ry="24" fill="#f6d3b0"/>' +
+      '<circle cx="46" cy="74" r="20" fill="#8a5a3c"/><circle cx="46" cy="74" r="11" fill="#f6b99a"/>' +
+      '<circle cx="154" cy="74" r="20" fill="#8a5a3c"/><circle cx="154" cy="74" r="11" fill="#f6b99a"/>' +
+      '<path d="M90 30q4-18 12-6q8-10 8 6z" fill="#8a5a3c"/>' +
+      '<ellipse cx="100" cy="74" rx="52" ry="50" fill="#8a5a3c"/>' +
+      '<circle cx="81" cy="68" r="22" fill="#f6d3b0"/><circle cx="119" cy="68" r="22" fill="#f6d3b0"/>' +
+      '<ellipse cx="100" cy="94" rx="38" ry="26" fill="#f6d3b0"/>' +
+      eye(82, 68, 7) +
+      '<path d="M110 70q9-10 18 0" fill="none" stroke="#2a2233" stroke-width="4.500" stroke-linecap="round"/>' +
+      '<circle cx="95" cy="85" r="2" fill="#b57f5c"/><circle cx="105" cy="85" r="2" fill="#b57f5c"/>' +
+      '<path d="M76 95q24 28 48 0z" fill="#5a2630"/>' +
+      '<ellipse cx="106" cy="107" rx="9" ry="7" fill="#ff7a8a"/>' +
+      cheeks(64, 136, 90, 7),
+    penguin:
+      '<ellipse cx="100" cy="147" rx="58" ry="9" fill="#bfe3ff"/>' +
+      '<ellipse cx="80" cy="144" rx="14" ry="7" fill="#ff9d2e"/><ellipse cx="120" cy="144" rx="14" ry="7" fill="#ff9d2e"/>' +
+      '<ellipse cx="50" cy="92" rx="10" ry="30" transform="rotate(38 50 92)" fill="#2f3d66"/>' +
+      '<ellipse cx="150" cy="92" rx="10" ry="30" transform="rotate(-38 150 92)" fill="#2f3d66"/>' +
+      '<ellipse cx="100" cy="82" rx="48" ry="62" fill="#2f3d66"/>' +
+      '<ellipse cx="100" cy="100" rx="33" ry="42" fill="#fff"/>' +
+      '<circle cx="85" cy="58" r="19" fill="#fff"/><circle cx="115" cy="58" r="19" fill="#fff"/>' +
+      eye(86, 58, 6) + eye(114, 58, 6) +
+      '<path d="M90 70h20q2 0 1 2l-9 11q-2 2-4 0l-9-11q-1-2 1-2z" fill="#ff9d2e"/>' +
+      cheeks(72, 128, 72, 7) +
+      '<path d="M66 96q34 16 68 0l2 12q-36 16-72 0z" fill="#ffc933"/>' +
+      '<path d="M118 104l14 26-14-4-6 10-6-30z" fill="#ffc933"/>',
+    parrot:
+      '<path d="M86 118l-10 40h14l10-22 10 22h14l-10-40z" fill="#2f7de1"/>' +
+      '<rect x="42" y="137" width="116" height="10" rx="5" fill="#a9744f"/>' +
+      '<path d="M62 84c-20 8-24 34-14 50 14-6 22-22 22-40z" fill="#ffc933"/>' +
+      '<path d="M52 108c-8 8-8 20-4 26 9-4 15-12 18-22z" fill="#2f7de1"/>' +
+      '<g transform="translate(200 0) scale(-1 1)"><path d="M62 84c-20 8-24 34-14 50 14-6 22-22 22-40z" fill="#ffc933"/><path d="M52 108c-8 8-8 20-4 26 9-4 15-12 18-22z" fill="#2f7de1"/></g>' +
+      '<ellipse cx="100" cy="106" rx="40" ry="40" fill="#ef4f4f"/>' +
+      '<ellipse cx="100" cy="116" rx="24" ry="24" fill="#ff8a7a"/>' +
+      '<rect x="80" y="134" width="15" height="11" rx="5.500" fill="#f5a623"/><rect x="105" y="134" width="15" height="11" rx="5.500" fill="#f5a623"/>' +
+      '<path d="M100 30c-12-14-3-25 2-27 0 9 7 13 4 27z" fill="#ffc933"/>' +
+      '<path d="M90 32c-15-8-13-21-10-25 4 9 13 11 15 23z" fill="#2f7de1"/>' +
+      '<path d="M110 32c15-8 13-21 10-25-4 9-13 11-15 23z" fill="#2f7de1"/>' +
+      '<circle cx="100" cy="62" r="37" fill="#ef4f4f"/>' +
+      '<ellipse cx="80" cy="60" rx="16" ry="17" fill="#fff"/><ellipse cx="120" cy="60" rx="16" ry="17" fill="#fff"/>' +
+      eye(83, 60, 6) + eye(117, 60, 6) +
+      '<path d="M85 72q15-14 30 0q0 22-15 30q-15-8-15-30z" fill="#ffb627"/>' +
+      '<path d="M92 88q8 5 16 0q-2 9-8 14q-6-5-8-14z" fill="#3a2a33"/>' +
+      '<path d="M150 20h30a8 8 0 0 1 8 8v14a8 8 0 0 1-8 8h-16l-9 9v-9h-5a8 8 0 0 1-8-8V28a8 8 0 0 1 8-8z" fill="#fff"/>' +
+      '<circle cx="155" cy="35" r="3.500" fill="#ef4f4f"/><circle cx="166" cy="35" r="3.500" fill="#ffb627"/><circle cx="177" cy="35" r="3.500" fill="#2f7de1"/>',
+    giraffe:
+      '<g transform="rotate(-7 100 160)">' +
+      '<path d="M80 164l5-74h30l5 74z" fill="#ffcf66"/>' +
+      '<ellipse cx="94" cy="118" rx="6" ry="8" fill="#d98b3a"/><ellipse cx="108" cy="136" rx="7" ry="8" fill="#d98b3a"/><ellipse cx="92" cy="150" rx="6" ry="7" fill="#d98b3a"/>' +
+      '<ellipse cx="56" cy="52" rx="18" ry="9" transform="rotate(-18 56 52)" fill="#ffcf66"/><ellipse cx="57" cy="52" rx="10" ry="4.500" transform="rotate(-18 57 52)" fill="#f6a08c"/>' +
+      '<ellipse cx="144" cy="52" rx="18" ry="9" transform="rotate(18 144 52)" fill="#ffcf66"/><ellipse cx="143" cy="52" rx="10" ry="4.500" transform="rotate(18 143 52)" fill="#f6a08c"/>' +
+      '<rect x="82" y="14" width="8" height="26" rx="4" fill="#ffcf66"/><circle cx="86" cy="14" r="8" fill="#a8642a"/>' +
+      '<rect x="110" y="14" width="8" height="26" rx="4" fill="#ffcf66"/><circle cx="114" cy="14" r="8" fill="#a8642a"/>' +
+      '<ellipse cx="100" cy="62" rx="36" ry="32" fill="#ffcf66"/>' +
+      '<ellipse cx="74" cy="44" rx="7" ry="5" fill="#d98b3a"/><ellipse cx="126" cy="46" rx="6" ry="5" fill="#d98b3a"/><ellipse cx="100" cy="36" rx="6" ry="4" fill="#d98b3a"/>' +
+      '<ellipse cx="100" cy="88" rx="31" ry="21" fill="#fff0cc"/>' +
+      eye(83, 62, 7) + eye(117, 62, 7) +
+      '<ellipse cx="91" cy="84" rx="3" ry="4" fill="#c98a4a"/><ellipse cx="109" cy="84" rx="3" ry="4" fill="#c98a4a"/>' +
+      '<path d="M86 95q5 6 10 1q5 6 10 1q4 3 8-2" fill="none" stroke="#7a4a22" stroke-width="3.500" stroke-linecap="round" stroke-linejoin="round"/>' +
+      cheeks(68, 132, 78, 6) +
+      '</g>',
+    sloth:
+      '<rect x="6" y="14" width="188" height="13" rx="6.500" fill="#a9744f"/>' +
+      '<path d="M150 14c8-10 20-8 22 0z" fill="#58c08a"/><path d="M24 14c4-9 16-9 20 0z" fill="#58c08a"/>' +
+      '<path d="M62 76V26M138 76V26" stroke="#a98b6d" stroke-width="22" stroke-linecap="round"/>' +
+      '<path d="M54 12v10M62 10v10M70 12v10M130 12v10M138 10v10M146 12v10" stroke="#f1e2c6" stroke-width="4.500" stroke-linecap="round"/>' +
+      '<ellipse cx="100" cy="98" rx="60" ry="52" fill="#a98b6d"/>' +
+      '<ellipse cx="100" cy="100" rx="45" ry="37" fill="#f4e6cd"/>' +
+      '<ellipse cx="78" cy="96" rx="17" ry="10" transform="rotate(-24 78 96)" fill="#7a5f47"/>' +
+      '<ellipse cx="122" cy="96" rx="17" ry="10" transform="rotate(24 122 96)" fill="#7a5f47"/>' +
+      '<path d="M73 96q6 6 12 0M115 96q6 6 12 0" fill="none" stroke="#f4e6cd" stroke-width="3.500" stroke-linecap="round"/>' +
+      '<ellipse cx="100" cy="106" rx="8" ry="5.500" fill="#4a382a"/>' +
+      '<path d="M89 117q11 9 22 0" fill="none" stroke="#4a382a" stroke-width="3.500" stroke-linecap="round"/>' +
+      cheeks(66, 134, 112, 6) +
+      '<g class="rs-zz" fill="#8b7bd8" font-family="Baloo 2,Trebuchet MS,sans-serif" font-weight="800"><text x="160" y="72" font-size="22">z</text><text x="174" y="54" font-size="16">z</text></g>',
+    buddy: /* fallback: a happy banana */
+      '<path d="M54 118q-22-6-26-26" fill="none" stroke="#e0a800" stroke-width="8" stroke-linecap="round"/>' +
+      '<path d="M150 96q22-10 22-34" fill="none" stroke="#e0a800" stroke-width="8" stroke-linecap="round"/>' +
+      '<g transform="translate(22 -6) scale(6.600)">' + BAN + '</g>' +
+      eye(92, 84, 7) + eye(118, 98, 7) +
+      '<path d="M88 104q8 14 22 10" fill="none" stroke="#5a2630" stroke-width="4.500" stroke-linecap="round"/>' +
+      cheeks(80, 122, 100, 0)
+  };
+  /* the 20/20 reward: same monkey, golden fur, and a crown that drops on after the reveal */
+  ART.monkeyGold = ART.monkey.replace(/#8a5a3c/g, '#f0a41c').replace(/#f6d3b0/g, '#fff1d0').replace(/#f6b99a/g, '#ffd08a').replace(/#b57f5c/g, '#d98b1f') +
+    '<g class="rs-crown"><g transform="translate(0 5) rotate(-9 100 30)">' +
+    '<path d="M71 33L66 5l20 13L100 0l14 18 20-13-5 28z" fill="#ffd84a"/>' +
+    '<path d="M100 0l14 18 20-13-5 28h-29z" fill="#ffc21a"/>' +
+    '<rect x="69" y="27" width="62" height="9" rx="4.500" fill="#e58a00"/>' +
+    '<circle cx="66" cy="5" r="4.500" fill="#fff"/><circle cx="100" cy="1" r="5" fill="#fff"/><circle cx="134" cy="5" r="4.500" fill="#fff"/>' +
+    '<circle cx="100" cy="31.500" r="4" fill="#ff5d73"/><circle cx="82" cy="31.500" r="3" fill="#5db4ff"/><circle cx="118" cy="31.500" r="3" fill="#5db4ff"/>' +
+    '</g></g>';
+  var ANIMALS = [
+    { k: 'monkey',  re: /monkey|chimp|\bape\b|gibbon/i },
+    { k: 'penguin', re: /penguin/i },
+    { k: 'parrot',  re: /parrot|parakeet|macaw|cockatoo|budgie/i },
+    { k: 'giraffe', re: /giraffe/i },
+    { k: 'sloth',   re: /sloth/i }
+  ];
+  function animalFor(title) {
+    for (var i = 0; i < ANIMALS.length; i++) if (ANIMALS[i].re.test(title || '')) return ANIMALS[i].k;
+    return 'buddy';
+  }
+  function art(k, cls) {
+    return '<svg class="' + cls + '" viewBox="0 0 200 160" aria-hidden="true" focusable="false"><g clip-path="url(#rs-clip)">' + ART[k] + '</g></svg>';
+  }
+
+  /* ---------- skill icons (24x24) ---------- */
+  var ICON = {
+    real: '<path d="M12 20.500S4.600 16 2.900 11.300C1.700 8 3.700 4.800 7 4.800c2 0 3.500 1 5 2.900 1.500-1.900 3-2.900 5-2.900 3.300 0 5.300 3.200 4.100 6.500C19.400 16 12 20.500 12 20.500z"/>',
+    present: '<path fill-rule="evenodd" d="M1.800 12S5.500 5.300 12 5.300 22.200 12 22.200 12 18.500 18.700 12 18.700 1.800 12 1.800 12zm10.200-3.700a3.700 3.700 0 1 0 0 7.400 3.700 3.700 0 0 0 0-7.400z"/>',
+    well: '<path d="M12 2.300s7 7 7 12.200a7 7 0 0 1-14 0C5 9.300 12 2.300 12 2.300z"/>',
+    comfort: '<circle cx="7.500" cy="7.500" r="3.300"/><circle cx="16.500" cy="7.500" r="3.300"/><path d="M1.500 20.500c0-4.500 2.600-7.300 6-7.300 1.800 0 3.300.800 4.500 2.100 1.200-1.300 2.700-2.100 4.500-2.100 3.400 0 6 2.800 6 7.300z"/>',
+    cool: '<path fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round" d="M12 2.500v19M3.800 7.200l16.400 9.600M20.200 7.200 3.800 16.800M9.300 3.800 12 6.300l2.700-2.500M9.300 20.200l2.700-2.500 2.700 2.500"/>',
+    star: '<path d="M12 2.200l2.900 6.300 6.900.800-5.100 4.700 1.400 6.800L12 17.400l-6.100 3.400 1.400-6.800L2.200 9.300l6.900-.800z"/>'
+  };
+  function icon(k) {
+    return '<svg class="rs-ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">' + (ICON[k] || ICON.star) + '</svg>';
+  }
+  var SPARK = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 0l1.600 4.400L12 6 7.600 7.600 6 12 4.400 7.600 0 6l4.400-1.600z" fill="currentColor"/></svg>';
+
+  function splitTitle(title) {
+    var m = /^(.*\bas an?)\s+(.+)$/i.exec(title || '');
+    return m ? { lead: m[1], punch: m[2] } : { lead: '', punch: title || '' };
+  }
+  function plural(n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); }
+
+  function mascot(mood, size) {
+    try {
+      if (T.chrome && typeof T.chrome.mascot === 'function') {
+        var s = T.chrome.mascot(mood, size);
+        if (typeof s === 'string' && s.indexOf('<svg') > -1) return s;
+      }
+    } catch (e) {}
+    return '';
+  }
+
+  /* ---------- render ---------- */
+  function render(S) {
+    var max = T.MAX || 20, b = Math.max(0, Math.min(max, S.bananas || 0)), ratio = max ? b / max : 0;
+    var t = T.titleFor(b) || { title: 'A talker in training', blurb: '' };
+    var gold = max > 0 && b >= max;   /* keyed on the score, so it works with or without a dedicated top title */
+    var animal = gold ? 'monkey' : animalFor(t.title), parts = splitTitle(t.title);
+    var cele = b >= max ? 'max' : ratio >= 0.9 ? 'big' : ratio >= 0.7 ? 'mid' : ratio >= 0.5 ? 'small' : 'soft';
+
+    /* skills */
+    /* A skill is "nailed" only when every one of its rounds is logged as great. A skill with nothing logged is
+       "not played". "Next up" only ever goes to a skill with a round that was actually missed. */
+    var keys = Object.keys(T.SKILLS || {}), weakest = -1, weakRatio = 2, log = S.log || [], allNailed = keys.length > 0;
+    var stats = keys.map(function (k, i) {
+      var mine = log.filter(function (l) { return l.skill === k; });
+      var total = (T.SCENES || []).filter(function (sc) { return sc.skill === k; }).length || mine.length;
+      var got = mine.reduce(function (n, l) { return n + (T.PTS[l.rating] || 0); }, 0);
+      var missed = mine.some(function (l) { return l.rating !== 'great'; });
+      var nailed = total > 0 && mine.length >= total && !missed;
+      var pr = mine.length ? got / (mine.length * 2) : null;
+      if (missed && pr < weakRatio) { weakRatio = pr; weakest = i; }
+      if (!nailed) allNailed = false;
+      return { k: k, got: got, max: total * 2, played: mine.length, nailed: nailed, r: total ? Math.min(1, got / (total * 2)) : 0 };
+    });
+    var C = 2 * Math.PI * 21;
+    var tiles = stats.map(function (s, i) {
+      var lvl = !s.played ? 'none' : s.nailed ? 'strong' : s.r >= 0.5 ? 'mid' : 'low';
+      var word = lvl === 'strong' ? 'nailed it' : lvl === 'mid' ? 'getting there' : lvl === 'low' ? 'needs practice' : 'not played';
+      var off = (C * (1 - s.r)).toFixed(1);
+      return '<li class="rs-skill is-' + lvl + (s.r ? '' : ' is-zero') + (i === weakest ? ' is-next' : '') + '" style="--i:' + i + '" ' +
+        'aria-label="' + T.SKILLS[s.k].name + ': ' + (s.played ? s.got + ' of ' + s.max + ' bananas, ' : '') + word + (i === weakest ? ', practise this next' : '') + '">' +
+        '<span class="rs-medal" aria-hidden="true">' +
+          '<svg class="rs-ring" viewBox="0 0 52 52"><circle class="rs-ring-track" cx="26" cy="26" r="21"/>' +
+          '<circle class="rs-ring-fill" cx="26" cy="26" r="21" style="--c:' + C.toFixed(1) + ';stroke-dasharray:' + C.toFixed(1) + ';stroke-dashoffset:' + off + '"/></svg>' +
+          '<span class="rs-disc">' + icon(s.k) + '</span>' +
+          (lvl === 'strong' ? '<span class="rs-tick"><svg viewBox="0 0 12 12"><path d="M2.500 6.300l2.400 2.400 4.600-5" fill="none" stroke="#fff" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : '') +
+        '</span>' +
+        '<span class="rs-skill-name" aria-hidden="true">' + T.SKILLS[s.k].name + '</span>' +
+        (i === weakest ? '<span class="rs-next-tag" aria-hidden="true">Next up</span>' : '') +
+        '</li>';
+    }).join('');
+
+    /* the tip row always has the same shape: mascot face on the left, label + one line on the right */
+    function tipRow(cls, at, mood, label, body) {
+      var face = mascot(mood, 44);
+      return '<div class="rs-tip' + cls + '"' + (at > -1 ? ' style="--at:' + at + ';--n:' + keys.length + '"' : '') + '>' +
+        (face ? '<span class="rs-tip-face" aria-hidden="true">' + face + '</span>' : '') +
+        '<p class="rs-tip-text"><span class="rs-tip-k">' + label + '</span>' + body + '</p></div>';
+    }
+    var tip;
+    if (weakest > -1) {
+      var w = T.SKILLS[stats[weakest].k];
+      tip = tipRow('', weakest, 'think', 'Try this next time', '<b>' + w.name + ':</b> ' + w.tip);
+    } else if (allNailed) {
+      tip = tipRow(' is-all', -1, 'cheer', 'All ' + (keys.length === 5 ? 'five' : keys.length) + ' skills nailed', 'Now try one on a real person today.');
+    } else {
+      tip = tipRow(' is-info', -1, 'happy', 'Nothing missed so far', 'Play every round to fill in all the skills.');
+    }
+
+    /* bananas you can see */
+    var cols = max % 2 === 0 && max / 2 <= 14 ? max / 2 : 10, slots = '';
+    for (var i = 0; i < max; i++) {
+      slots += '<span class="rs-b' + (i < b ? ' is-got' : '') + '" style="--i:' + i + '">' +
+        '<svg class="rs-b-ghost" viewBox="0 0 24 24"><use href="#rs-ban"/></svg>' +
+        (i < b ? '<svg class="rs-b-full" viewBox="0 0 24 24"><use href="#rs-ban"/></svg>' : '') + '</span>';
+    }
+
+    /* a reason to press Play again — one goal per row: the next animal (or, from the top band, the golden monkey) */
+    var next = (T.TITLES || []).filter(function (x) { return x.min > b; }).sort(function (a, c) { return a.min - c.min; })[0];
+    var head, sub, sil;
+    if (gold) {
+      head = 'Golden monkey unlocked!'; sub = 'Can you do it twice in a row?';
+      sil = '<span class="rs-sil is-won" aria-hidden="true">' + art('monkeyGold', 'rs-sil-art') + '</span>';
+    } else if (next && next.min < max) {
+      var need = next.min - b;
+      head = ratio < 0.5 ? 'You can beat that. Go again?' : 'Who’s hiding?';
+      sub = need + (need === 1 ? ' more banana unlocks' : ' more bananas unlock') + ' a new animal.';
+      sil = '<span class="rs-sil" aria-hidden="true">' + art(animalFor(next.title), 'rs-sil-art') + '<b>?</b></span>';
+    } else {
+      head = 'So close!'; sub = plural(max - b, 'more banana') + ' for the golden monkey.';
+      sil = '<span class="rs-sil" aria-hidden="true">' + art('monkeyGold', 'rs-sil-art') + '<b>?</b></span>';
+    }
+
+    return '<section class="results" data-animal="' + animal + '" data-cele="' + cele + '"' + (gold ? ' data-gold="1"' : '') + ' aria-label="Your results">' +
+      '<svg class="rs-defs" width="0" height="0" aria-hidden="true" focusable="false"><symbol id="rs-ban" viewBox="0 0 24 24">' + BAN + '</symbol>' +
+        '<clipPath id="rs-clip"><rect x="-30" y="-30" width="260" height="176"/><circle cx="100" cy="86" r="77"/></clipPath></svg>' +
+      '<div class="rs-hero">' +
+        '<p class="rs-kicker">' + (gold ? '<b class="rs-perfect">Perfect score!</b> ' : '') + 'You are<span class="rs-dots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span></p>' +
+        '<div class="rs-art">' +
+          '<span class="rs-spark s1">' + SPARK + '</span><span class="rs-spark s2">' + SPARK + '</span>' +
+          '<span class="rs-spark s3">' + SPARK + '</span><span class="rs-spark s4">' + SPARK + '</span>' +
+          (gold ? '<span class="rs-spark s5">' + SPARK + '</span><span class="rs-spark s6">' + SPARK + '</span><span class="rs-spark s7">' + SPARK + '</span>' : '') +
+          '<span class="rs-q" aria-hidden="true">?</span>' +
+          '<span class="rs-pop"><span class="rs-idle">' + art(gold ? 'monkeyGold' : animal, 'rs-animal') + '</span></span>' +
+        '</div>' +
+        '<div class="rs-words">' +
+          '<h1 class="rs-title' + (parts.punch.length > 14 ? ' is-long' : '') + '">' +
+            (parts.lead ? '<span class="rs-lead">' + parts.lead + '</span> ' : '') +
+            '<span class="rs-punch">' + parts.punch + '</span></h1>' +
+          (t.blurb ? '<p class="rs-blurb">' + t.blurb + '</p>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="rs-score" role="img" aria-label="' + b + ' of ' + max + ' bananas">' +
+        '<div class="rs-count" aria-hidden="true"><b class="rs-num" data-n="' + b + '">' + b + '</b><span>of ' + max + '</span></div>' +
+        '<div class="rs-bunch" aria-hidden="true" style="--cols:' + cols + '">' + slots + '</div>' +
+      '</div>' +
+      '<ul class="rs-skills" style="--n:' + keys.length + '">' + tiles + '</ul>' +
+      tip +
+      '<div class="rs-end">' +
+        '<div class="rs-nudge">' + sil + '<p><b>' + head + '</b><span>' + sub + '</span></p></div>' +
+        '<div class="rs-cta"><button class="btn rs-go" data-act="replay">Play again</button></div>' +
+      '</div>' +
+      '</section>';
+  }
+
+  /* ---------- after: count-up + confetti (both skipped for reduced motion, both stop by themselves) ---------- */
+  var run = 0, canvas = null, raf = 0;
+  var T_BANANAS = 1750, STEP = 45, T_BURST = 1150;
+  function stop() {
+    run++;
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+    if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
+    canvas = null;
+  }
+  function still() {
+    try { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
+  }
+  function countUp(el, me) {
+    var n = +el.getAttribute('data-n') || 0, t0 = performance.now(), shown = -1;
+    if (!n) return;
+    el.textContent = '0';
+    (function tick(now) {
+      if (me !== run || !el.isConnected) return;
+      var v = Math.max(0, Math.min(n, Math.floor((now - t0 - T_BANANAS) / STEP) + 1));
+      if (v !== shown) { shown = v; el.textContent = v; }
+      if (v < n) requestAnimationFrame(tick);
+    })(t0);
+    /* never leave a wrong number behind if frames stop coming (hidden tab) */
+    setTimeout(function () { if (me === run && el.isConnected) el.textContent = n; }, T_BANANAS + n * STEP + 400);
+  }
+  function confetti(level, ox, oy, me) {
+    var W = window.innerWidth, H = window.innerHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+    var n = level === 'max' ? 150 : level === 'big' ? 130 : level === 'mid' ? 80 : 34;
+    var power = (level === 'small' ? 0.7 : 1) * (W < 520 ? 0.82 : 1.15);
+    var life = level === 'small' ? 2000 : 2900;
+    var cols = ['#ffc933', '#1fa97a', '#3b82f6', '#ff7a8a', '#8b5cf6', '#ff9d2e'];
+    /* a perfect score gets a show: the centre burst, then one cannon from each side, then a golden finale */
+    var bursts = [{ x: ox, y: oy, n: n, d: 0, dir: 0, pw: 1 }];
+    if (level === 'max') {
+      cols = ['#ffc933', '#ffe27a', '#fff', '#ffc933', '#ff7a8a', '#3b82f6', '#ffb000', '#1fa97a'];
+      bursts.push({ x: W * 0.04, y: H * 0.66, n: 70, d: 550, dir: 0.5, pw: 1.25 }, { x: W * 0.96, y: H * 0.66, n: 70, d: 900, dir: -0.5, pw: 1.25 },
+        { x: ox, y: oy, n: 110, d: 1500, dir: 0, pw: 1.15 });
+      life = 2900 + 1500;
+    }
+    var c = document.createElement('canvas'), g = c.getContext && c.getContext('2d');
+    if (!g) return;
+    c.className = 'rs-confetti'; c.setAttribute('aria-hidden', 'true');
+    c.width = W * dpr; c.height = H * dpr;
+    document.body.appendChild(c); canvas = c; g.scale(dpr, dpr);
+    var ps = [];
+    bursts.forEach(function (bu) {
+      for (var i = 0; i < bu.n; i++) {
+        var a = -Math.PI / 2 + bu.dir + (Math.random() - 0.5) * (bu.dir ? 1.2 : 2.3), sp = (5 + Math.random() * 12) * power * bu.pw;
+        ps.push({ x: bu.x + (Math.random() - 0.5) * 40, y: bu.y + (Math.random() - 0.5) * 20, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 2,
+          r: Math.random() * 6.3, vr: (Math.random() - 0.5) * 0.4, s: 6 + Math.random() * 6, col: cols[i % cols.length],
+          ban: i % 4 === 0, ph: Math.random() * 6.3, d: bu.d });
+      }
+    });
+    var t0 = performance.now(), prev = t0;
+    (function frame(now) {
+      if (me !== run) return;
+      var el = now - t0, k = Math.min(3, (now - prev) / 16.7); prev = now;
+      g.clearRect(0, 0, W, H);
+      g.globalAlpha = el > life - 600 ? Math.max(0, (life - el) / 600) : 1;
+      for (var i = 0; i < ps.length; i++) {
+        var p = ps[i];
+        if (el < p.d) continue;
+        p.vy += 0.32 * k; p.vx *= Math.pow(0.985, k); p.vy *= Math.pow(0.985, k);
+        p.x += (p.vx + Math.sin(el / 240 + p.ph) * 0.8) * k; p.y += p.vy * k; p.r += p.vr * k;
+        g.save(); g.translate(p.x, p.y); g.rotate(p.r);
+        if (p.ban) {
+          g.strokeStyle = '#ffc933'; g.lineWidth = p.s * 0.55; g.lineCap = 'round';
+          g.beginPath(); g.arc(0, 0, p.s * 1.1, 0.25, 2.1); g.stroke();
+        } else {
+          g.fillStyle = p.col; g.scale(1, Math.cos(el / 130 + p.ph));
+          g.fillRect(-p.s / 2, -p.s / 3, p.s, p.s * 0.66);
+        }
+        g.restore();
+      }
+      if (el < life) raf = requestAnimationFrame(frame);
+      else { raf = 0; if (c.parentNode) c.parentNode.removeChild(c); if (canvas === c) canvas = null; }
+    })(t0);
+  }
+  function after(S, root, changed) {
+    if (S.screen !== 'results') { if (canvas || raf) stop(); return; }
+    if (!changed || !changed.stage) return;
+    stop();
+    var me = run, stage = document.getElementById('tio-stage');
+    if (stage) stage.scrollTop = 0;
+    if (still()) return;
+    var num = stage && stage.querySelector('.rs-num'), sec = stage && stage.querySelector('.results');
+    if (num) countUp(num, me);
+    var level = sec && sec.getAttribute('data-cele');
+    if (level && level !== 'soft') {
+      setTimeout(function () {
+        if (me !== run || document.hidden) return;
+        var a = stage.querySelector('.rs-art'); if (!a) return;
+        var r = a.getBoundingClientRect();
+        confetti(level, r.left + r.width / 2, r.top + r.height * 0.55, me);
+      }, T_BURST);
+    }
+  }
+
+  T.results = { render: render, after: after };
+})();
+
+/* SHARED — state machine and render loop. Pieces should not edit this file.
+   Contract:
+     TIO.state          { screen:'start'|'play'|'results', i, order[], picked, checked, peek, bananas, streak, best, log[] }
+                        peek = display position of a reply the player tapped AFTER checking to see its reason (null = their own pick)
+     TIO.cur()          current scene;  TIO.reply(k) reply at display position k
+     TIO.actions        start, pick(k), check, peek(k) (only after check), next, replay, home  (wired to [data-act] clicks, data-k as arg)
+     Regions            #tio-top, #tio-stage, #tio-dock — each re-rendered only when its HTML string changes
+     Module hooks       TIO.chrome / TIO.sceneView / TIO.feedback / TIO.results may define after(state, root, changed)
+                        which runs after every draw; `changed` = { top, stage, dock } booleans.
+   Debug URL params:    ?r=4 jump to round 4 · &pick=great|ok|oops select that reply · &check=1 show feedback
+                        ?end=17 show the results screen with 17 bananas */
+(function () {
+  var T = window.TIO, PTS = { great: 2, ok: 1, oops: 0 };
+  var S = T.state = { screen: 'start', i: 0, order: [], picked: null, checked: false, peek: null, bananas: 0, streak: 0, best: 0, log: [] };
+  T.PTS = PTS;
+  T.MAX = T.SCENES.length * 2;
+  T.cur = function () { return T.SCENES[S.i]; };
+  T.reply = function (k) { return T.cur().replies[S.order[k]]; };
+  T.titleFor = function (b) {
+    return T.TITLES.slice().sort(function (a, c) { return c.min - a.min; }).filter(function (t) { return b >= t.min; })[0];
+  };
+
+  function newRound() {
+    var n = T.cur().replies.length, o = [];
+    for (var a = 0; a < n; a++) o.push(a);
+    for (var j = n - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = o[j]; o[j] = o[r]; o[r] = t; }
+    S.order = o; S.picked = null; S.checked = false; S.peek = null;
+  }
+
+  T.actions = {
+    start: function () {
+      S.screen = 'play'; S.i = 0; S.bananas = 0; S.streak = 0; S.best = 0; S.log = [];
+      newRound(); draw();
+    },
+    pick: function (k) { if (S.screen !== 'play' || S.checked) return; S.picked = +k; draw(); },
+    check: function () {
+      if (S.screen !== 'play' || S.picked == null || S.checked) return;
+      var r = T.reply(S.picked);
+      S.checked = true; S.bananas += PTS[r.rating];
+      S.streak = r.rating === 'great' ? S.streak + 1 : 0; S.best = Math.max(S.best, S.streak);
+      S.log.push({ id: T.cur().id, skill: T.cur().skill, rating: r.rating });
+      draw();
+    },
+    peek: function (k) { if (S.screen !== 'play' || !S.checked) return; S.peek = +k === S.picked ? null : +k; draw(); },
+    next: function () {
+      if (S.screen !== 'play' || !S.checked) return;
+      if (S.i >= T.SCENES.length - 1) S.screen = 'results'; else { S.i++; newRound(); }
+      draw();
+    },
+    replay: function () { T.actions.start(); },
+    home: function () { S.screen = 'start'; draw(); }
+  };
+
+  var last = {};
+  function put(id, html) {
+    if (last[id] === html) return false;
+    document.getElementById(id).innerHTML = html; last[id] = html; return true;
+  }
+  function draw() {
+    var root = document.getElementById('tio'), ch = {};
+    root.setAttribute('data-screen', S.screen);
+    root.setAttribute('data-state', S.screen !== 'play' ? '' : S.checked ? 'checked' : S.picked != null ? 'picked' : 'idle');
+    if (S.screen === 'start') {
+      ch.top = put('tio-top', ''); ch.stage = put('tio-stage', T.chrome.start(S)); ch.dock = put('tio-dock', '');
+    } else if (S.screen === 'play') {
+      ch.top = put('tio-top', T.chrome.topbar(S)); ch.stage = put('tio-stage', T.sceneView.render(S)); ch.dock = put('tio-dock', T.feedback.render(S));
+    } else {
+      ch.top = put('tio-top', ''); ch.stage = put('tio-stage', T.results.render(S)); ch.dock = put('tio-dock', '');
+    }
+    [T.chrome, T.sceneView, T.feedback, T.results].forEach(function (m) { if (m && m.after) m.after(S, root, ch); });
+  }
+  T.draw = draw;
+
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-act]');
+    if (!el || el.disabled) return;
+    var fn = T.actions[el.getAttribute('data-act')];
+    if (fn) fn(el.getAttribute('data-k'));
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (S.screen === 'start') T.actions.start();
+      else if (S.screen === 'results') T.actions.replay();
+      else if (S.checked) T.actions.next(); else T.actions.check();
+    } else if (S.screen === 'play' && /^[1-9]$/.test(e.key) && +e.key <= S.order.length) T.actions[S.checked ? 'peek' : 'pick'](+e.key - 1);
+  });
+
+  var q = new URLSearchParams(location.search);
+  if (q.has('end')) {
+    S.screen = 'results'; S.bananas = Math.max(0, Math.min(T.MAX, +q.get('end') || 0));
+    var left = S.bananas;
+    S.log = T.SCENES.map(function (sc) {
+      var r = left >= 2 ? 'great' : left === 1 ? 'ok' : 'oops'; left -= PTS[r];
+      return { id: sc.id, skill: sc.skill, rating: r };
+    });
+    S.best = S.log.filter(function (l) { return l.rating === 'great'; }).length;
+    draw();
+  } else if (q.has('r')) {
+    T.actions.start();
+    S.i = Math.max(0, Math.min(T.SCENES.length - 1, (+q.get('r') || 1) - 1)); newRound();
+    if (q.has('pick')) {
+      var want = q.get('pick');
+      S.order.forEach(function (ri, k) { if (T.cur().replies[ri].rating === want) S.picked = k; });
+    }
+    draw();
+    if (q.has('check')) T.actions.check();
+  } else draw();
+})();
+
+</script>
+</body>
+</html>

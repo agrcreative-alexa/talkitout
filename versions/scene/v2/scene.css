@@ -1,0 +1,148 @@
+/* PIECE A — scene screen
+   Reading order: 1 the speech bubble (hero) · 2 "What do you say?" · 3 the three reply cards. Everything else stays quiet. */
+.scene { --tag: var(--banana-deep); display: flex; flex-direction: column; gap: 18px; padding-top: 10px; }
+.scene[data-skill="real"] { --tag: #e0568a; }
+.scene[data-skill="present"] { --tag: #3b82f6; }
+.scene[data-skill="well"] { --tag: #14a3b8; }
+.scene[data-skill="comfort"] { --tag: #8b5cf6; }
+.scene[data-skill="cool"] { --tag: #1fa97a; }
+.scene-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* skill tag + one-line setting */
+.scene-head { display: flex; flex-direction: column; gap: 6px; }
+.scene-skill { margin: 0; display: flex; align-items: center; gap: 8px; font: 800 15px/1 var(--body); letter-spacing: .09em; text-transform: uppercase; color: var(--tag); }
+.scene-skill-ic { flex: none; width: 26px; height: 26px; padding: 5px; border-radius: 50%; background: var(--tag); color: #fff; }
+.scene-setting { margin: 0; font-size: 17px; line-height: 1.35; color: var(--ink-soft); }
+
+/* speaker: drawn character + speech bubble */
+.speaker { display: flex; align-items: center; gap: 22px; }
+.char { flex: none; width: 172px; }
+.char-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.char-eyes { transform-box: fill-box; transform-origin: 50% 60%; animation: char-blink 4.6s 1.4s infinite; }
+.bubble { position: relative; flex: 0 1 auto; min-width: 0; padding: 22px 24px 20px; border: 3px solid var(--ink); border-radius: 26px; background: var(--paper);
+  box-shadow: 0 6px 0 rgba(35, 48, 79, .16); }
+.bubble::before { content: ''; position: absolute; left: -12px; top: 50%; width: 19px; height: 19px; margin-top: -4px; background: var(--paper);
+  border-left: 3px solid var(--ink); border-bottom: 3px solid var(--ink); border-bottom-left-radius: 5px; transform: rotate(45deg) skew(8deg, 8deg); }
+.bubble-who { position: absolute; left: 18px; top: -13px; padding: 5px 12px 4px; border-radius: 99px; background: var(--ink); color: #fff;
+  font: 800 13px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.bubble-says { margin: 0; font: 800 28px/1.18 var(--display); color: var(--ink); text-wrap: balance; }
+.bubble-short .bubble-says { font-size: 32px; }
+.bubble-long .bubble-says { font-size: 25px; }
+
+.scene-ask { margin: 2px 0 -6px; font: 800 24px/1.1 var(--display); color: var(--ink); }
+
+/* reply cards */
+.replies { display: flex; flex-direction: column; gap: 12px; padding-bottom: 6px; }
+.reply { position: relative; display: flex; align-items: center; gap: 14px; width: 100%; min-height: 66px; text-align: left; padding: 14px 18px 14px 14px;
+  border: 2px solid var(--line); border-radius: 18px; background: var(--paper); color: var(--ink);
+  box-shadow: 0 5px 0 var(--line-deep); -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  transition: transform .09s, box-shadow .09s, background-color .12s, border-color .12s; }
+.reply-key { flex: none; width: 32px; height: 32px; border: 2px solid var(--line); border-bottom-width: 3px; border-radius: 10px; display: grid; place-items: center;
+  font: 800 15px/1 var(--body); color: var(--ink-soft); background: var(--paper); transition: background-color .12s, border-color .12s, color .12s; }
+.reply-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.reply-text { font: 700 19px/1.3 var(--body); }
+.reply-line { display: flex; align-items: flex-start; gap: 9px; }
+.reply-tag { flex: none; width: 40px; padding: 5px 0 4px; border-radius: 8px; text-align: center; font: 800 11px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; margin-top: 2px; }
+.reply-do .reply-tag { background: var(--banana); color: var(--ink); }
+.reply-say .reply-tag { background: var(--mist); color: var(--ink-soft); }
+.reply-act { font: 700 16px/1.3 var(--body); color: #7a5a00; background: #fff4cc; border-radius: 9px; padding: 2px 9px 3px; margin: -1px 0; }
+
+@media (hover: hover) {
+  .reply:hover:not(:disabled) { background: #f6f9ff; border-color: var(--line-deep); transform: translateY(-2px); box-shadow: 0 7px 0 var(--line-deep); }
+  .reply.is-picked:hover:not(:disabled) { background: var(--pick-wash); border-color: var(--pick); box-shadow: 0 7px 0 #2f6fdb; }
+}
+.reply:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 var(--line-deep); }
+.reply:focus-visible { outline: 3px solid var(--pick); outline-offset: 3px; }
+
+.reply.is-picked { border-color: var(--pick); background: var(--pick-wash); box-shadow: 0 5px 0 #2f6fdb; color: #1b4fb0; }
+.reply.is-picked .reply-key { border-color: #2f6fdb; background: var(--pick); color: #fff; }
+.reply.is-picked .reply-say .reply-tag { background: #cfe2ff; color: #1b4fb0; }
+.reply.is-picked:active:not(:disabled) { box-shadow: 0 1px 0 #2f6fdb; }
+
+.reply:disabled { cursor: default; }
+.reply-mark { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; }
+.reply-mark-ic { width: 22px; height: 22px; }
+.reply.is-great, .reply.is-best { border-color: var(--great); background: var(--great-wash); box-shadow: 0 5px 0 var(--great-deep); color: #0e5c41; }
+.reply.is-great .reply-key, .reply.is-best .reply-key { border-color: var(--great-deep); background: var(--great); color: #fff; }
+.reply.is-great .reply-mark, .reply.is-best .reply-mark { background: var(--great); }
+.reply.is-best { background: var(--paper); border-style: dashed; box-shadow: none; }
+.reply.is-best .reply-key { background: var(--paper); color: var(--great-deep); border-color: var(--great); }
+.reply.is-ok { border-color: var(--ok); background: var(--ok-wash); box-shadow: 0 5px 0 var(--ok-deep); color: #7a4b00; }
+.reply.is-ok .reply-key { border-color: var(--ok-deep); background: var(--ok); color: #fff; }
+.reply.is-ok .reply-mark { background: var(--ok); }
+.reply.is-oops { border-color: var(--oops); background: var(--oops-wash); box-shadow: 0 5px 0 var(--oops-deep); color: #8f2227; }
+.reply.is-oops .reply-key { border-color: var(--oops-deep); background: var(--oops); color: #fff; }
+.reply.is-oops .reply-mark { background: var(--oops); }
+.reply.is-dim { opacity: .45; box-shadow: 0 2px 0 var(--line); }
+.reply.is-great .reply-say .reply-tag, .reply.is-best .reply-say .reply-tag, .reply.is-ok .reply-say .reply-tag, .reply.is-oops .reply-say .reply-tag { background: rgba(255, 255, 255, .7); color: inherit; }
+
+/* motion — entry runs once per round (class added by scene.js), never blocks input; tokens.css switches it all off under reduced motion */
+.scene.is-enter .scene-head { animation: sc-fade .28s both; }
+.scene.is-enter .char { animation: sc-pop .46s cubic-bezier(.3, 1.5, .5, 1) both; }
+.scene.is-enter .bubble { transform-origin: 0 55%; animation: sc-bubble .38s .14s cubic-bezier(.3, 1.4, .5, 1) both; }
+.scene.is-enter .scene-ask { animation: sc-fade .25s .3s both; }
+.scene.is-enter .reply { animation: sc-rise .32s calc(.34s + var(--n, 0) * .07s) cubic-bezier(.25, 1.2, .5, 1) both; }
+.reply.just-picked { animation: sc-pick .26s cubic-bezier(.3, 1.6, .5, 1); }
+.reply.just-picked .reply-key { animation: sc-key .3s cubic-bezier(.3, 1.8, .5, 1); }
+.reply.is-great.just-checked { animation: sc-yes .5s cubic-bezier(.3, 1.5, .5, 1); }
+.reply.is-ok.just-checked { animation: sc-pick .3s; }
+.reply.is-oops.just-checked { animation: sc-no .42s; }
+.reply.is-best.just-checked { animation: sc-fade .4s .2s both; }
+.reply.just-checked .reply-mark { animation: sc-pop .4s .08s cubic-bezier(.3, 1.7, .5, 1) both; }
+@keyframes sc-fade { from { opacity: 0; } }
+@keyframes sc-pop { from { opacity: 0; transform: scale(.55) rotate(-8deg); } }
+@keyframes sc-bubble { from { opacity: 0; transform: scale(.7) translateX(-10px); } }
+@keyframes sc-rise { from { opacity: 0; transform: translateY(16px) scale(.98); } }
+@keyframes sc-pick { 0% { transform: scale(.97); } 60% { transform: scale(1.02); } 100% { transform: none; } }
+@keyframes sc-key { 0% { transform: scale(.6) rotate(-12deg); } 100% { transform: none; } }
+@keyframes sc-yes { 0% { transform: none; } 35% { transform: translateY(-7px) scale(1.02); } 70% { transform: translateY(1px); } 100% { transform: none; } }
+@keyframes sc-no { 0%, 100% { transform: none; } 20% { transform: translateX(-7px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(2px); } }
+@keyframes char-blink { 0%, 95%, 100% { transform: none; } 97.5% { transform: scaleY(.1); } }
+
+/* touch screens have no number keys, so drop the key badge and give the words the room */
+@media (hover: none) { .reply-key { display: none; } .reply { padding-left: 18px; } }
+
+@media (max-width: 560px) {
+  .scene { gap: 13px; padding-top: 2px; }
+  .scene-head { gap: 5px; }
+  .scene-skill { font-size: 13px; gap: 7px; }
+  .scene-skill-ic { width: 22px; height: 22px; padding: 4px; }
+  .scene-setting { font-size: 15px; line-height: 1.3; }
+  .speaker { gap: 14px; margin-top: 6px; }
+  .char { width: 100px; margin-left: -4px; }
+  .bubble { padding: 17px 15px 13px; border-radius: 22px; box-shadow: 0 5px 0 rgba(35, 48, 79, .16); }
+  .bubble::before { left: -11px; width: 17px; height: 17px; }
+  .bubble-who { left: 13px; top: -12px; font-size: 12px; padding: 4px 10px 3px; }
+  .bubble-says { font-size: 21px; line-height: 1.16; }
+  .bubble-short .bubble-says { font-size: 24px; }
+  .bubble-long .bubble-says { font-size: 19px; }
+  .scene-ask { font-size: 20px; margin: 2px 0 -4px; }
+  .replies { gap: 10px; }
+  .reply { min-height: 58px; padding: 11px 14px; gap: 10px; border-radius: 16px; }
+  .reply-key { display: none; }
+  .reply-body { gap: 6px; }
+  .reply-text { font-size: 16.5px; line-height: 1.28; }
+  .reply-act { font-size: 14.5px; padding: 1px 8px 2px; }
+  .reply-tag { width: 36px; font-size: 10px; margin-top: 2px; }
+  .reply-line { gap: 7px; }
+  .reply-mark { width: 28px; height: 28px; }
+  .reply-mark-ic { width: 18px; height: 18px; }
+}
+@media (max-width: 350px) {
+  .char { width: 84px; }
+  .bubble-says, .bubble-short .bubble-says { font-size: 19px; }
+}
+/* tall phones have room to spare: spend it on the character and on fatter cards */
+@media (max-width: 560px) and (min-width: 351px) and (min-height: 740px) {
+  .scene { gap: 16px; padding-top: 6px; }
+  .char { width: 122px; }
+  .bubble { padding: 20px 16px 16px; }
+  .bubble-says { font-size: 22px; }
+  .bubble-short .bubble-says { font-size: 26px; }
+  .bubble-long .bubble-says { font-size: 20px; }
+  .scene-ask { font-size: 22px; }
+  .replies { gap: 12px; }
+  .reply { min-height: 68px; padding: 14px 16px; }
+  .reply-text { font-size: 17.5px; }
+  .reply-act { font-size: 15px; }
+}

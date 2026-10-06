@@ -1,0 +1,251 @@
+/* PIECE A — scene screen
+   Reading order: 1 the speech bubble (hero) · 2 "What do you say?" · 3 the three reply cards. Everything else stays quiet.
+   The scene fills the stage: the three cards share out whatever height is left, so the screen is never top-heavy.
+   After Check (.scene.is-checked) the top compacts so all three cards sit between the top bar and the feedback sheet. */
+.scene { --tag: var(--banana-deep); display: flex; flex-direction: column; gap: 18px; padding-top: 10px; min-height: 100%; }
+.scene[data-skill="real"] { --tag: #e0568a; }
+.scene[data-skill="present"] { --tag: #3b82f6; }
+.scene[data-skill="well"] { --tag: #14a3b8; }
+.scene[data-skill="comfort"] { --tag: #8b5cf6; }
+.scene[data-skill="cool"] { --tag: #1fa97a; }
+.scene-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* skill tag + one-line setting */
+.scene-head { flex: none; display: flex; flex-direction: column; gap: 6px; }
+.scene-skill { margin: 0; display: flex; align-items: center; gap: 8px; font: 800 15px/1 var(--body); letter-spacing: .09em; text-transform: uppercase; color: var(--tag); }
+.scene-skill-ic { flex: none; width: 26px; height: 26px; padding: 5px; border-radius: 50%; background: var(--tag); color: #fff; }
+/* the setting is the one line that must not be skipped: body size, full ink (lighter in weight than the bubble) */
+.scene-setting { margin: 0; font-size: 20px; font-weight: 600; line-height: 1.3; color: var(--ink); text-wrap: pretty; }
+
+/* speaker: drawn character + speech bubble */
+.speaker { flex: none; display: flex; align-items: center; gap: 22px; }
+.char { flex: none; width: 172px; }
+.char-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.char-eyes { transform-box: fill-box; transform-origin: 50% 60%; animation: char-blink 4.6s 1.4s infinite; }
+.bubble { position: relative; flex: 0 1 auto; min-width: 0; padding: 22px 24px 20px; border: 3px solid var(--ink); border-radius: 26px; background: var(--paper);
+  box-shadow: 0 6px 0 rgba(35, 48, 79, .16); }
+.bubble::before { content: ''; position: absolute; left: -12px; top: 50%; width: 19px; height: 19px; margin-top: -4px; background: var(--paper);
+  border-left: 3px solid var(--ink); border-bottom: 3px solid var(--ink); border-bottom-left-radius: 5px; transform: rotate(45deg) skew(8deg, 8deg); }
+.bubble-who { position: absolute; left: 18px; top: -13px; padding: 5px 12px 4px; border-radius: 99px; background: var(--ink); color: #fff;
+  font: 800 13px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.bubble-says { margin: 0; font: 800 28px/1.18 var(--display); color: var(--ink); text-wrap: balance; }
+.bubble-short .bubble-says { font-size: 32px; }
+.bubble-long .bubble-says { font-size: 25px; }
+
+.scene-ask { flex: none; margin: 2px 0 -6px; font: 800 24px/1.1 var(--display); color: var(--ink); }
+
+/* reply cards — three different-coloured blocks, each led by a face showing how it's said */
+.replies { flex: 1 1 auto; display: flex; flex-direction: column; gap: 14px; padding-bottom: 6px; }
+.reply { --tint: #fff5d2; --edge: #f2cf63; --deep: #dcae2c; --face: #ffc933; --face-deep: #e0a800;
+  position: relative; flex: 1 1 auto; display: flex; align-items: center; gap: 16px; width: 100%; min-height: 88px; max-height: 170px; text-align: left; padding: 12px 20px 12px 14px;
+  border: 3px solid var(--edge); border-radius: 22px; background: var(--tint); color: var(--ink);
+  box-shadow: 0 6px 0 var(--deep); -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  transition: transform .09s, box-shadow .09s, background-color .12s, border-color .12s; }
+.reply-p1 { --tint: #ffe8f1; --edge: #f8b3cf; --deep: #e386ad; --face: #ff8fb8; --face-deep: #df6397; }
+.reply-p2 { --tint: #ebe6ff; --edge: #c5b6fb; --deep: #9d87ea; --face: #a98dfb; --face-deep: #8364e2; }
+
+.reply-face { flex: none; width: 96px; transition: transform .16s cubic-bezier(.3, 1.6, .5, 1); }
+.vf { display: block; width: 100%; height: auto; overflow: visible; }
+.vf-head, .vf-hand { fill: var(--face); }
+.vf-edge { fill: var(--face-deep); }
+.vf-hand { stroke: var(--face-deep); stroke-width: 2; }
+
+.reply-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.reply-text { font: 800 21px/1.25 var(--body); text-wrap: pretty; }
+/* the "do" half of a reply: a quiet stage direction, the same on every card, so it never hints at the answer */
+.reply-act { display: flex; align-items: flex-start; gap: 5px; font: italic 600 15.500px/1.25 var(--body); color: #55607d; text-wrap: pretty; }
+.reply-act-ic { flex: none; width: 15px; height: 15px; margin-top: 2px; opacity: .7; }
+
+/* 1/2/3 keyboard hint: small, in the corner, desktop only */
+.reply-key { position: absolute; top: 8px; right: 10px; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 7px; display: grid; place-items: center;
+  font: 800 12px/1 var(--body); color: #55607d; background: rgba(255, 255, 255, .75); box-shadow: inset 0 0 0 1.500px rgba(35, 48, 79, .16), 0 2px 0 rgba(35, 48, 79, .12); }
+
+/* hover: the whole card lifts, deepens in colour and gets a darker edge */
+@media (hover: hover) {
+  .reply:hover { transform: translateY(-4px); border-color: var(--deep); background-color: color-mix(in srgb, var(--tint) 72%, var(--edge));
+    box-shadow: 0 10px 0 var(--deep), 0 18px 22px -8px rgba(35, 48, 79, .32); }
+  .reply:hover .reply-face { transform: scale(1.1) rotate(-5deg); }
+}
+.reply:active { transform: translateY(5px); box-shadow: 0 1px 0 var(--deep); }
+.reply:focus-visible { outline: 3px solid var(--pick); outline-offset: 3px; }
+
+/* picked: the loudest thing on the screen — solid blue, a touch bigger, its face turned blue to match */
+.reply.is-picked .reply-face { transform: scale(1.12) rotate(-6deg); }
+.scene:not(.is-checked) .reply.is-picked { --edge: #1d4fc4; --deep: #173f9c; --tint: #2563eb; --face: #d6e6ff; --face-deep: #8fb4f5;
+  color: #fff; background-color: var(--tint); border-color: var(--edge); transform: scale(1.025); z-index: 1;
+  box-shadow: 0 7px 0 var(--deep), 0 0 0 5px rgba(37, 99, 235, .26); }
+.scene:not(.is-checked) .reply.is-picked:active { transform: scale(1.005) translateY(4px); box-shadow: 0 2px 0 var(--deep), 0 0 0 5px rgba(37, 99, 235, .26); }
+.scene:not(.is-checked) .reply.is-picked:focus-visible { outline-color: var(--ink); outline-offset: 7px; }
+.scene:not(.is-checked) .reply.is-picked .reply-act { color: #dbe8ff; }
+.scene:not(.is-checked) .reply.is-picked .reply-key { background: #fff; color: #1d4fc4; box-shadow: 0 2px 0 #173f9c; }
+/* ...and while one is picked the other two step back: pale card, greyed face, softer text (still plainly tappable) */
+.scene.has-pick .reply:not(.is-picked) { --tint: #f7f9fc; --edge: var(--line); --deep: var(--line-deep); color: #5d6883; box-shadow: 0 4px 0 var(--deep); }
+.scene.has-pick .reply:not(.is-picked) .reply-face { filter: saturate(.3); opacity: .7; }
+.scene.has-pick .reply:not(.is-picked) .reply-act { color: #7b859d; }
+.scene.has-pick .reply:not(.is-picked) .reply-key { opacity: .7; }
+@media (hover: hover) {
+  .scene.has-pick .reply:not(.is-picked):hover { border-color: var(--ink-soft); background-color: #fff; color: var(--ink);
+    box-shadow: 0 8px 0 var(--line-deep), 0 16px 20px -8px rgba(35, 48, 79, .3); }
+  .scene.has-pick .reply:not(.is-picked):hover .reply-face { filter: none; opacity: 1; }
+}
+/* gentle (loss) rounds: the three reply faces are quiet and muted */
+.scene[data-tone="gentle"] .reply { --face: #f0d488; --face-deep: #cdb065; }
+.scene[data-tone="gentle"] .reply-p1 { --face: #eeb4c8; --face-deep: #cf8fa7; }
+.scene[data-tone="gentle"] .reply-p2 { --face: #c3b6ee; --face-deep: #a092d4; }
+
+/* after Check: every card is still a button (tap = see its reason) */
+.reply-mark { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: var(--edge); }
+.reply-mark-ic { width: 23px; height: 23px; }
+.reply-why { background: var(--paper); color: var(--ink-soft); font: 800 20px/1 var(--display); box-shadow: inset 0 0 0 2px var(--line-deep), 0 3px 0 var(--line-deep); }
+.reply-flag { position: absolute; top: -13px; left: 16px; display: flex; align-items: center; gap: 4px; padding: 5px 11px 4px; border-radius: 99px; background: var(--edge); color: #fff;
+  font: 800 12.500px/1 var(--body); letter-spacing: .07em; text-transform: uppercase; white-space: nowrap; box-shadow: 0 2px 0 var(--deep); }
+.reply-flag-ic { width: 13px; height: 13px; margin-top: -1px; }
+.scene.is-checked .reply-key { display: none; }
+
+.reply.is-dim { --tint: var(--paper); --edge: var(--line); --deep: var(--line-deep); box-shadow: 0 4px 0 var(--deep); }
+.reply.is-dim .reply-text { color: #48546f; }
+.reply.is-great, .reply.is-best, .reply.is-peeked-great { --edge: var(--great); --deep: var(--great-deep); --tint: var(--great-wash); color: #0b5139; }
+.reply.is-ok, .reply.is-peeked-ok { --edge: var(--ok); --deep: var(--ok-deep); --tint: var(--ok-wash); color: #6b4200; }
+.reply.is-oops, .reply.is-peeked-oops { --edge: var(--oops); --deep: var(--oops-deep); --tint: var(--oops-wash); color: #86201f; }
+.reply.is-ok .reply-flag, .reply.is-ok .reply-mark { background: var(--ok-deep); }
+.reply.is-great .reply-flag, .reply.is-best .reply-flag { background: var(--great-deep); box-shadow: 0 2px 0 #0b5139; }
+.reply[class*="is-peeked-"] { --tint: var(--paper); }
+.scene.is-checked .reply-act { color: inherit; opacity: .8; }
+/* the best reply you missed: the brightest thing on the screen */
+.reply.is-best { border-width: 4px; box-shadow: 0 6px 0 var(--deep), 0 0 0 5px rgba(31, 169, 122, .2); }
+.reply.is-best .reply-mark { background: var(--banana); color: #7a5200; box-shadow: 0 3px 0 var(--banana-deep); }
+/* whichever reply the feedback sheet is talking about wears a navy ring */
+.reply.is-shown:not(.is-picked) { box-shadow: 0 6px 0 var(--deep), 0 0 0 4px var(--paper), 0 0 0 7px var(--ink); }
+.reply.is-best.is-shown { box-shadow: 0 6px 0 var(--deep), 0 0 0 4px var(--paper), 0 0 0 7px var(--ink); }
+.scene.is-checked .reply:active { transform: translateY(3px); }
+
+/* checked: compact the top so the three cards fit between the top bar and the feedback sheet */
+.scene.is-checked { gap: 12px; padding-top: 4px; }
+.scene.is-checked .scene-setting { display: none; }
+.scene.is-checked .scene-ask { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; }
+.scene.is-checked .char { width: 84px; }
+.scene.is-checked .char-eyes { animation: none; }
+/* fixed height: the speaker's line changes as you tap between replies, and nothing below may move when it does */
+.scene.is-checked .speaker { gap: 16px; height: 88px; }
+.scene.is-checked .bubble-says { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.scene.is-checked .bubble-back { min-width: 150px; }
+.scene.is-checked .bubble { padding: 15px 18px 11px; border-radius: 20px; box-shadow: 0 4px 0 rgba(35, 48, 79, .16); }
+.scene.is-checked .bubble-says, .scene.is-checked .bubble-short .bubble-says, .scene.is-checked .bubble-long .bubble-says { font-size: 19px; }
+.scene.is-checked .replies { gap: 16px; padding-top: 6px; padding-bottom: 10px; }
+.scene.is-checked .reply { min-height: 70px; max-height: 160px; padding-block: 9px; }
+.scene.is-checked .reply-face { width: 78px; transform: none; }
+.scene.is-checked .reply-text { font-size: 19px; }
+.scene.is-checked .reply-act { font-size: 14.500px; }
+
+/* motion — entry runs once per round (class added by scene.js). Nothing here starts invisible: the cards are on screen and
+   tappable from the first frame, they only settle into place. tokens.css switches it all off under reduced motion. */
+.scene.is-enter .char { animation: sc-pop .34s cubic-bezier(.3, 1.5, .5, 1) backwards; }
+.scene.is-enter .bubble { transform-origin: 0 55%; animation: sc-bubble .3s .04s cubic-bezier(.3, 1.4, .5, 1) backwards; }
+.scene.is-enter .reply { animation: sc-rise .26s calc(var(--n, 0) * .045s) cubic-bezier(.25, 1.3, .5, 1) backwards; }
+.scene.is-enter .reply-face { animation: sc-face .4s calc(.1s + var(--n, 0) * .06s) cubic-bezier(.3, 1.6, .5, 1) backwards; }
+.reply.just-picked { animation: sc-pick .26s cubic-bezier(.3, 1.6, .5, 1); }
+.scene:not(.is-checked) .reply.just-picked { animation-name: sc-pick-in; }
+/* after Check the speaker answers back: the face and the bubble pop so the eye goes there first */
+.speaker.is-react .char { animation: sc-pop .36s cubic-bezier(.3, 1.6, .5, 1) backwards; }
+.speaker.is-react .bubble { transform-origin: 0 55%; animation: sc-react .34s .05s cubic-bezier(.3, 1.6, .5, 1) backwards; }
+.reply.just-picked .reply-face { animation: sc-face .34s cubic-bezier(.3, 1.8, .5, 1) backwards; }
+.reply.is-great.just-checked { animation: sc-yes .5s cubic-bezier(.3, 1.5, .5, 1); }
+.reply.is-ok.just-checked { animation: sc-pick .3s; }
+.reply.is-oops.just-checked { animation: sc-no .42s; }
+.reply.is-best.just-checked { animation: sc-best .9s .25s cubic-bezier(.3, 1.4, .5, 1) backwards; }
+.reply.just-checked .reply-mark, .reply.just-checked .reply-flag { animation: sc-mark .36s .1s cubic-bezier(.3, 1.7, .5, 1) backwards; }
+@keyframes sc-pop { from { transform: scale(.82) rotate(-7deg); } }
+@keyframes sc-bubble { from { transform: scale(.88) translateX(-8px); } }
+@keyframes sc-rise { from { transform: translateY(14px); } }
+@keyframes sc-face { from { transform: scale(.7) rotate(-14deg); } }
+@keyframes sc-mark { from { transform: scale(.4) rotate(-12deg); } }
+@keyframes sc-pick-in { 0% { transform: scale(.97); } 60% { transform: scale(1.045); } 100% { transform: scale(1.025); } }
+@keyframes sc-react { 0% { transform: scale(.8) translateX(-6px); } 60% { transform: scale(1.05); } 100% { transform: none; } }
+@keyframes sc-pick { 0% { transform: scale(.97); } 60% { transform: scale(1.02); } 100% { transform: none; } }
+@keyframes sc-yes { 0% { transform: none; } 35% { transform: translateY(-7px) scale(1.02); } 70% { transform: translateY(1px); } 100% { transform: none; } }
+@keyframes sc-no { 0%, 100% { transform: none; } 20% { transform: translateX(-7px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(2px); } }
+@keyframes sc-best { 0% { transform: none; } 25% { transform: scale(1.035); box-shadow: 0 6px 0 var(--deep), 0 0 0 12px rgba(31, 169, 122, .28); } 55% { transform: scale(.995); } 100% { transform: none; } }
+@keyframes char-blink { 0%, 95%, 100% { transform: none; } 97.5% { transform: scaleY(.1); } }
+
+/* touch screens have no number keys */
+@media (hover: none) { .reply-key { display: none; } }
+
+@media (max-width: 560px) {
+  .scene { gap: 13px; padding-top: 2px; }
+  .scene-head { gap: 5px; }
+  .scene-skill { font-size: 13px; gap: 7px; }
+  .scene-skill-ic { width: 22px; height: 22px; padding: 4px; }
+  .scene-setting { font-size: 17.500px; line-height: 1.28; }
+  .speaker { gap: 13px; margin-top: 6px; }
+  .char { width: 92px; margin-left: -4px; }
+  .bubble { flex: 1 1 0; padding: 17px 13px 13px; border-radius: 22px; box-shadow: 0 5px 0 rgba(35, 48, 79, .16); }
+  .bubble::before { left: -11px; width: 17px; height: 17px; }
+  .bubble-who { left: 13px; top: -12px; font-size: 12px; padding: 4px 10px 3px; }
+  .bubble-says { font-size: 20px; line-height: 1.16; }
+  .bubble-short .bubble-says { font-size: 22px; }
+  .bubble-long .bubble-says { font-size: 18.500px; }
+  .scene-ask { font-size: 20px; margin: 2px 0 -4px; }
+  .replies { gap: 12px; }
+  .reply { min-height: 76px; max-height: 150px; padding: 10px 14px 10px 10px; gap: 10px; border-radius: 20px; }
+  .reply-face { width: 76px; }
+  .reply-key { display: none; }
+  .reply-body { gap: 4px; }
+  .reply-text { font-size: 17px; line-height: 1.24; }
+  .reply-act { font-size: 14px; }
+  .reply-act-ic { width: 13px; height: 13px; }
+  .reply-mark { width: 30px; height: 30px; }
+  .reply-mark-ic { width: 19px; height: 19px; }
+  .reply-why { font-size: 17px; }
+  .reply-flag { left: 12px; top: -12px; font-size: 11.500px; padding: 4px 9px 3px; }
+
+  .scene.is-checked { gap: 10px; padding-top: 0; }
+  .scene.is-checked .scene-head { display: none; }
+  .scene.is-checked .speaker { gap: 12px; margin-top: 4px; height: 66px; }
+  .scene.is-checked .bubble-back { min-width: 0; }
+  .scene.is-checked .char { width: 62px; margin-left: 0; }
+  .scene.is-checked .bubble { padding: 13px 12px 8px; border-width: 2.500px; border-radius: 18px; }
+  .scene.is-checked .bubble-says, .scene.is-checked .bubble-short .bubble-says, .scene.is-checked .bubble-long .bubble-says { font-size: 16.500px; line-height: 1.15; }
+  .scene.is-checked .bubble-who { font-size: 11px; top: -11px; }
+  .scene.is-checked .replies { gap: 15px; padding-top: 8px; padding-bottom: 8px; }
+  .scene.is-checked .reply { min-height: 62px; max-height: 132px; padding: 8px 10px 7px 8px; gap: 8px; border-radius: 18px; }
+  .scene.is-checked .reply-face { width: 62px; }
+  .scene.is-checked .reply-text { font-size: 16.500px; line-height: 1.2; }
+  .scene.is-checked .reply-act { font-size: 13.500px; line-height: 1.2; }
+  .scene.is-checked .reply-body { gap: 2px; }
+}
+@media (max-width: 350px) {
+  .char { width: 80px; }
+  .bubble-says, .bubble-short .bubble-says { font-size: 19px; }
+  .reply-face { width: 58px; }
+}
+/* tall phones have room to spare: spend it on the character */
+@media (max-width: 560px) and (min-width: 351px) and (min-height: 740px) {
+  .scene { gap: 15px; padding-top: 6px; }
+  .scene:not(.is-checked) .char { width: 100px; }
+  .scene:not(.is-checked) .bubble { padding: 19px 14px 15px; }
+  .scene:not(.is-checked) .bubble-says { font-size: 20.500px; }
+  .scene:not(.is-checked) .bubble-short .bubble-says { font-size: 23px; }
+  .scene:not(.is-checked) .bubble-long .bubble-says { font-size: 19px; }
+  .scene-ask { font-size: 22px; }
+}
+/* short windows: keep the cards on screen by trimming the portrait */
+@media (min-width: 561px) and (max-height: 860px) {
+  .scene { gap: 12px; padding-top: 2px; }
+  .scene:not(.is-checked) .char { width: 124px; }
+  .reply { min-height: 78px; }
+  .reply-face { width: 68px; }
+}
+/* small, short phones: trim the top and the card padding so all three replies stay above the Check button */
+@media (max-width: 560px) and (max-height: 700px) {
+  .scene { gap: 9px; padding-top: 0; }
+  .speaker { margin-top: 4px; }
+  .scene:not(.is-checked) .char { width: 74px; }
+  .scene:not(.is-checked) .bubble { padding: 14px 12px 10px; }
+  .scene:not(.is-checked) .bubble-says, .scene:not(.is-checked) .bubble-short .bubble-says { font-size: 18px; }
+  .scene-ask { font-size: 18px; margin: 0 0 -3px; }
+  .replies { gap: 10px; padding-bottom: 2px; }
+  .reply { min-height: 60px; padding-block: 6px; box-shadow: 0 4px 0 var(--deep); }
+  .reply-face { width: 58px; }
+  .reply-text { font-size: 16px; line-height: 1.2; }
+  .reply-act { font-size: 13px; line-height: 1.2; }
+}

@@ -1,0 +1,21 @@
+/* PIECE C — lesson chrome and flow */
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 28px;
+  border: 0; border-radius: var(--r); font: 800 17px/1 var(--body); letter-spacing: .06em; text-transform: uppercase;
+  background: var(--banana); color: var(--ink); box-shadow: 0 4px 0 var(--banana-deep); transition: transform .08s, box-shadow .08s; }
+.btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--banana-deep); }
+.btn:disabled { background: var(--mist); color: #a9b3c9; box-shadow: 0 4px 0 var(--line); cursor: default; }
+
+.topbar { display: flex; align-items: center; gap: 16px; max-width: 860px; margin: 0 auto; padding: 20px 20px 12px; }
+.topbar-quit { border: 0; background: none; font-size: 22px; color: #a9b3c9; padding: 4px 8px; }
+.progress { flex: 1; height: 16px; border-radius: 99px; background: var(--mist); overflow: hidden; }
+.progress-fill { height: 100%; min-width: 0; border-radius: 99px; background: var(--banana); transition: width .4s; }
+.topbar-count { font: 800 18px/1 var(--body); color: var(--banana-deep); white-space: nowrap; }
+
+.start { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding-block: 24px; }
+.start-mascot { font-size: 96px; line-height: 1; }
+.start-title { font: 800 56px/1 var(--display); margin: 0; }
+.start-sub { margin: 0; font-size: 20px; color: var(--ink-soft); }
+.start-skills { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 6px 0 10px; padding: 0; }
+.start-skills li { padding: 6px 14px; border-radius: 99px; background: var(--mist); font-weight: 700; font-size: 15px; }
+.start .btn-go { min-width: 240px; }
+.start-note { margin: 0; font-size: 14px; color: var(--ink-soft); }

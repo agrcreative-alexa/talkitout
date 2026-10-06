@@ -1,0 +1,23 @@
+/* PIECE B — feedback moment */
+.dock { border-top: 2px solid var(--line); padding: 16px 20px calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--paper); }
+.dock-row { max-width: 860px; margin: 0 auto; display: flex; align-items: center; gap: 20px; }
+.dock-row-end { justify-content: flex-end; }
+.dock .btn { flex: none; min-width: 150px; }
+.dock-great { background: var(--great-wash); border-top-color: var(--great-wash); }
+.dock-ok { background: var(--ok-wash); border-top-color: var(--ok-wash); }
+.dock-oops { background: var(--oops-wash); border-top-color: var(--oops-wash); }
+.verdict { flex: 1; min-width: 0; }
+.verdict-head { margin: 0 0 4px; font: 800 24px/1.1 var(--display); }
+.verdict-pts { font: 800 16px/1 var(--body); margin-left: 6px; }
+.verdict p { margin: 0 0 4px; font-size: 16px; line-height: 1.4; }
+.verdict-tip { opacity: .85; }
+.dock-great .verdict-head { color: var(--great-deep); }
+.dock-ok .verdict-head { color: var(--ok-deep); }
+.dock-oops .verdict-head { color: var(--oops-deep); }
+.dock-great .btn { background: var(--great); color: #fff; box-shadow: 0 4px 0 var(--great-deep); }
+.dock-ok .btn { background: var(--ok); color: #fff; box-shadow: 0 4px 0 var(--ok-deep); }
+.dock-oops .btn { background: var(--oops); color: #fff; box-shadow: 0 4px 0 var(--oops-deep); }
+@media (max-width: 600px) {
+  .dock-row { flex-direction: column; align-items: stretch; gap: 12px; }
+  .dock .btn { width: 100%; }
+}

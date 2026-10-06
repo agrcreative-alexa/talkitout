@@ -1,0 +1,96 @@
+{
+ "lede": "A ten-round game for 9 to 12 year olds on handling hard conversations. Each piece gets a builder, then a fresh critic who compares it blind against Duolingo's web lesson flow and names the biggest gap. Up to three attempts per piece.",
+ "updated": "Finished",
+ "now": "Done. All five pieces were picked blind, the clean-up pass is in, and a full ten-round play-through at desktop and phone width ran with no errors. The clean-up changes were checked by play-through, not re-judged by a critic.",
+ "foot": "Reference: Duolingo web lesson, captured at desktop and phone width (question, selected, right, wrong). Critics see it as unlabelled Product P.",
+ "pieces": [
+  {
+   "id": "scene",
+   "name": "Scene screen",
+   "what": "The moment itself: who is talking, what they say, and the reply cards you choose from.",
+   "result": "won",
+   "resultLabel": "Picked blind",
+   "attempts": [
+    {
+     "n": 1,
+     "status": "lost",
+     "note": "Builder done: drawn characters with moods, big speech bubble, chunky reply cards with DO and SAY rows.",
+     "gap": "The three reply cards are near-identical white text rows, the dullest thing on screen, and the round needs 40 to 55 words of reading before the first tap. Give each reply its own visual identity (a tone face or tint) and let the cards fill the empty space. Also: the DO chip appears only on some cards and gives the answer away."
+    },
+    {
+     "n": 2,
+     "status": "won",
+     "note": "Critic picked ours: a named character with a funny line and three full cards that fill the screen. It still flagged that the reply faces and action lines can give the answer away, and that the picked card is not the loudest thing on screen. Those go into a clean-up pass and the writing piece."
+    }
+   ]
+  },
+  {
+   "id": "feedback",
+   "name": "Feedback moment",
+   "what": "What happens when you press Check: the rating, why it works or doesn't, and the better reply.",
+   "result": "won",
+   "resultLabel": "Picked blind",
+   "attempts": [
+    {
+     "n": 1,
+     "status": "lost",
+     "note": "Builder done: drawn monkey verdict, banana reward, one bold reason, quieter better-reply card, chime, Continue pinned on phones.",
+     "gap": "On a nearly-right or wrong answer the panel stacks four text blocks (40 to 50 words) and on a phone covers half the screen, hiding the reply cards it talks about. Cut to heading, one short reason and Continue; show the better reply by lighting its card."
+    },
+    {
+     "n": 2,
+     "status": "won",
+     "note": "Critic picked ours: the picked card recolours, the best reply lights up, bananas fly to the counter, nothing is taken away on a miss, and the loss rounds are toned correctly. It logged bugs in the tap-to-see-why path and asked for the speaker to react after Check. Those go into the clean-up pass."
+    }
+   ]
+  },
+  {
+   "id": "chrome",
+   "name": "Start, progress and flow",
+   "what": "Start screen, progress bar, banana count, and how one round hands over to the next.",
+   "result": "won",
+   "resultLabel": "Picked blind",
+   "attempts": [
+    {
+     "n": 1,
+     "status": "won",
+     "note": "Critic picked ours: one tap to the first question, a top bar that rewards every good answer, and a safe quit. Remaining gap it named (Continue button moves between states on desktop) is passed to the feedback builder."
+    }
+   ]
+  },
+  {
+   "id": "results",
+   "name": "Results and cheeky title",
+   "what": "The final screen: your title, your bananas, and how you did on each of the five skills.",
+   "result": "won",
+   "resultLabel": "Picked blind",
+   "attempts": [
+    {
+     "n": 1,
+     "status": "won",
+     "note": "Critic picked ours for the illustrated animal titles and the unlock teaser. Caveat: no reference end screen was captured, so it judged against an assumed one. Clean-up pass since then: a perfect 20 now earns a golden crowned monkey, the wrong 'all skills nailed' banner and grammar are fixed, title no longer clips on phones."
+    }
+   ]
+  },
+  {
+   "id": "content",
+   "name": "Scene writing",
+   "what": "The ten scenes, the replies, and the one-line reasons, written for a ten year old.",
+   "result": "won",
+   "resultLabel": "Picked blind",
+   "attempts": [
+    {
+     "n": 1,
+     "status": "lost",
+     "note": "Builder done: all ten scenes rewritten shorter and funnier, reordered to ease in, grief scenes kept plain.",
+     "gap": "A full game is about 900 words of reading against the reference's 100, and half the rounds give the answer away. The winning lines in the conflict rounds sound like a counsellor wrote them, and the two loss rounds sit back to back under party-style feedback. Cut each round to a few short lines, make wrong answers things kids really say, and separate and quieten the loss rounds."
+    },
+    {
+     "n": 2,
+     "status": "won",
+     "note": "Critic picked ours: lines short, concrete and funny enough to pay for the reading, wrong answers a child would really say, loss rounds handled without preaching. It still wants the last two rounds' best replies in more of a playground voice and fewer giveaways from faces and action lines. Those go into the clean-up pass."
+    }
+   ]
+  }
+ ]
+}

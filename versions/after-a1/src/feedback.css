@@ -1,0 +1,118 @@
+/* PIECE B — feedback moment (docked footer: Check, then verdict + why + better reply + tip + Continue) */
+.dock { --fb-wash: var(--paper); --fb-deep: var(--ink); --fb-btn: var(--banana); --fb-edge: var(--banana-deep); --fb-soft: #55607d;
+  position: relative; overflow: hidden; background: var(--paper); border-top: 2px solid var(--line); }
+.dock-in { padding: 16px 20px calc(16px + env(safe-area-inset-bottom, 0px)); }
+.dock-row { max-width: 860px; margin: 0 auto; display: flex; align-items: center; gap: 22px; }
+
+/* ---------- buttons: chunky, obviously pressable ---------- */
+.dock .btn { flex: none; min-width: 180px; min-height: 58px; padding: 0 34px; margin-bottom: 5px; border-radius: 18px;
+  font: 800 18px/1 var(--body); letter-spacing: .07em; text-transform: uppercase;
+  background: var(--fb-btn); color: var(--ink); box-shadow: 0 5px 0 var(--fb-edge), inset 0 2px 0 rgba(255,255,255,.35);
+  transition: transform .08s, box-shadow .08s, filter .12s; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.dock .btn:hover:not(:disabled) { filter: brightness(1.06); }
+.dock .btn:active:not(:disabled) { transform: translateY(5px); box-shadow: 0 0 0 var(--fb-edge), inset 0 2px 0 rgba(255,255,255,.35); }
+.dock .btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.dock .btn:disabled { background: #e4e9f3; color: #9aa5be; box-shadow: none; transform: translateY(5px); cursor: default; }
+
+/* ---------- before Check ---------- */
+.dock-check .dock-row { justify-content: space-between; }
+.dock-hint { margin: 0; font: 700 17px/1.2 var(--body); color: var(--ink-soft); }
+.dock-check.is-ready .dock-hint { color: var(--ink); }
+.dock-check.is-ready .btn { animation: fb-ready .38s cubic-bezier(.3,1.6,.5,1) both, fb-nudge 2.8s 1.6s ease-in-out infinite; }
+@keyframes fb-ready { from { transform: translateY(5px) scale(.94); } }
+@keyframes fb-nudge { 0%, 86%, 100% { transform: none; } 91% { transform: translateY(-3px) scale(1.02); } 96% { transform: translateY(1px); } }
+
+/* ---------- after Check: tones ---------- */
+.dock-fb { border-top: 0; background: transparent; }
+.dock-great { --fb-wash: var(--great-wash); --fb-deep: var(--great-deep); --fb-btn: #179468; --fb-edge: #0e6b4a; }
+.dock-ok    { --fb-wash: var(--ok-wash);    --fb-deep: var(--ok-deep);    --fb-btn: #c97b00; --fb-edge: #955a00; }
+.dock-oops  { --fb-wash: var(--oops-wash);  --fb-deep: var(--oops-deep);  --fb-btn: #dd4449; --fb-edge: #a82f34; }
+.dock-fb .dock-in { background: var(--fb-wash); box-shadow: 0 80px 0 var(--fb-wash); max-height: 72vh; display: flex; flex-direction: column;
+  animation: fb-rise .44s cubic-bezier(.2,.9,.3,1) both; }
+.dock-fb .dock-row { width: 100%; flex: 1; min-height: 0; align-items: stretch; }
+.dock-fb .btn { color: #fff; }
+@keyframes fb-rise { from { transform: translateY(100%); } 62% { transform: translateY(-9px); } 82% { transform: translateY(3px); } }
+
+.fb-scroll { flex: 1; min-width: 0; min-height: 0; display: flex; align-items: flex-start; gap: 18px; }
+.fb-cta { flex: none; display: flex; align-items: center; }
+
+/* icon: monkey on a white disc, with a little verdict badge */
+.fb-icon { position: relative; flex: none; width: 88px; height: 88px; }
+.fb-disc { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 50%; background: #fff;
+  box-shadow: 0 4px 0 rgba(35,48,79,.10); animation: fb-pop .5s .14s cubic-bezier(.3,1.7,.5,1) both; }
+.fb-monkey { width: 82%; height: 82%; display: block; }
+.fb-badge-wrap { position: absolute; right: -4px; bottom: -4px; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%;
+  background: var(--fb-btn); border: 3px solid var(--fb-wash); animation: fb-pop .4s .42s cubic-bezier(.3,1.9,.5,1) both; }
+.fb-badge { width: 22px; height: 22px; display: block; }
+@keyframes fb-pop { from { transform: scale(0) rotate(-24deg); } }
+.dock-ok .fb-disc { animation-name: fb-pop-ok; }
+@keyframes fb-pop-ok { from { transform: scale(0); } 70% { transform: scale(1.08) rotate(6deg); } }
+.dock-oops .fb-disc { animation: fb-tilt .7s .14s ease-out both; }
+@keyframes fb-tilt { from { transform: scale(.4); opacity: 0; } 45% { transform: scale(1.04) rotate(-9deg); opacity: 1; } 75% { transform: rotate(5deg); } }
+
+/* great only: a burst of banana-yellow sparks */
+.fb-sparks { position: absolute; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; }
+.fb-sparks i { position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; border-radius: 3px; background: var(--banana); opacity: 0;
+  transform: rotate(var(--a)) translateY(calc(var(--d) * -1)) scale(.2); animation: fb-spark .7s .2s cubic-bezier(.2,.8,.3,1) both; }
+.fb-sparks i:nth-child(3n) { background: var(--great); border-radius: 50%; }
+.fb-sparks i:nth-child(4n+1) { background: #ff8a80; }
+@keyframes fb-spark { from { transform: rotate(var(--a)) translateY(-10px) scale(1); opacity: 1; } 60% { opacity: 1; } }
+
+/* verdict text: three weights, loudest first */
+.verdict { flex: 1; min-width: 0; padding-top: 2px; }
+.verdict-top { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.verdict-head { margin: 0; font: 800 32px/1.05 var(--display); color: var(--fb-deep); }
+.fb-reward { display: inline-flex; align-items: center; gap: 2px; padding: 3px 10px 3px 12px; border-radius: 99px; background: #fff;
+  box-shadow: 0 3px 0 rgba(35,48,79,.10); animation: fb-pop .4s .3s cubic-bezier(.3,1.7,.5,1) both; }
+.fb-plus { font: 800 20px/1 var(--display); color: var(--banana-deep); margin-right: 2px; padding-top: 2px; }
+.fb-nana { display: inline-grid; animation: fb-nana .45s calc(.52s + var(--n) * .16s) cubic-bezier(.3,1.9,.5,1) both; }
+.fb-banana { width: 26px; height: 26px; display: block; }
+@keyframes fb-nana { from { transform: translateY(-16px) scale(0) rotate(-60deg); opacity: 0; } }
+.verdict-why { margin: 6px 0 0; max-width: 34em; font: 700 19px/1.35 var(--body); color: var(--ink); text-wrap: pretty; }
+
+.fb-more { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; max-width: 36em; animation: fb-fade .4s .34s ease-out both; }
+@keyframes fb-fade { from { opacity: 0; } }
+.fb-better { padding: 9px 14px 10px; border-radius: 14px; background: rgba(255,255,255,.72); border-left: 5px solid var(--great); }
+.fb-label { display: block; font: 800 12px/1 var(--body); letter-spacing: .09em; text-transform: uppercase; color: var(--great-deep); }
+.fb-quote { margin: 5px 0 0; font: 700 17px/1.3 var(--body); color: var(--ink); }
+.fb-quote-why { margin: 3px 0 0; font: 500 15px/1.35 var(--body); color: var(--fb-soft); }
+.verdict-tip { margin: 0; display: flex; align-items: flex-start; gap: 6px; font: 500 15px/1.35 var(--body); color: var(--fb-soft); }
+.verdict-tip b { font-weight: 800; color: var(--ink); }
+.fb-bulb { flex: none; width: 18px; height: 18px; margin-top: 1px; }
+
+/* short desktop windows: text scrolls, Continue stays put */
+@media (max-height: 620px) {
+  .fb-scroll { overflow-y: auto; margin: -12px; padding: 12px; overscroll-behavior: contain; }
+  .dock-fb .dock-in { max-height: 66vh; }
+}
+
+/* ---------- phone ---------- */
+@media (max-width: 600px) {
+  .dock-in { padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px)); }
+  .dock-row { flex-direction: column; align-items: stretch; gap: 12px; }
+  .dock .btn { width: 100%; min-height: 56px; }
+  .dock-hint { display: none; }
+  .dock-fb .dock-in { max-height: 60vh; max-height: 60dvh; }
+  .dock-fb .dock-row { gap: 12px; }
+  .fb-scroll { display: grid; grid-template-columns: 54px minmax(0, 1fr); column-gap: 12px; align-items: center; align-content: start;
+    overflow-y: auto; margin: -12px -12px 0; padding: 12px 12px 2px; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  .fb-icon { width: 54px; height: 54px; }
+  .fb-badge-wrap { width: 24px; height: 24px; right: -5px; bottom: -5px; border-width: 2px; }
+  .fb-badge { width: 16px; height: 16px; }
+  .fb-sparks i { width: 7px; height: 7px; left: -3.5px; top: -3.5px; transform: rotate(var(--a)) translateY(calc(var(--d) * -.6)) scale(.2); }
+  .verdict { display: contents; }
+  .verdict-head { font-size: 26px; }
+  .fb-banana { width: 22px; height: 22px; }
+  .fb-plus { font-size: 18px; }
+  .verdict-why, .fb-more { grid-column: 1 / -1; }
+  .verdict-why { margin-top: 8px; font-size: 17px; line-height: 1.32; }
+  .fb-more { margin-top: 8px; gap: 6px; }
+  .fb-better { padding: 7px 12px 8px; }
+  .fb-quote { font-size: 16px; margin-top: 4px; }
+  .fb-quote-why, .verdict-tip { font-size: 14px; }
+  .fb-cta { display: block; }
+}
+@media (max-width: 600px) and (max-height: 620px) {
+  .dock-fb .dock-in { max-height: 64vh; max-height: 64dvh; }
+  .verdict-why { margin-top: 4px; }
+}

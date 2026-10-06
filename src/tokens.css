@@ -1,0 +1,31 @@
+/* SHARED — design tokens and page frame. Pieces may ADD tokens here, never rename or remove.
+   Layout: one column, three stacked regions (top bar / scrolling stage / docked footer) filling the viewport. */
+:root {
+  --ink: #23304f;         /* text */
+  --ink-soft: #6a7592;    /* secondary text */
+  --paper: #ffffff;
+  --mist: #eef3fb;        /* quiet fills, tracks */
+  --line: #dfe6f2;        /* borders */
+  --line-deep: #c9d3e6;   /* chunky bottom edge of buttons/cards */
+  --banana: #ffc933;      /* brand accent */
+  --banana-deep: #e0a800;
+  --pick: #3b82f6;        /* selected */
+  --pick-wash: #e3efff;
+  --great: #1fa97a;  --great-wash: #dcf7ec;  --great-deep: #14815c;
+  --ok: #e08a00;     --ok-wash: #fff1d1;     --ok-deep: #b06c00;
+  --oops: #e5484d;   --oops-wash: #ffe3e2;   --oops-deep: #b93338;
+  --display: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', sans-serif;
+  --body: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+  --r: 16px;
+  --col: 640px;           /* content column */
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--paper); color: var(--ink); font: 500 18px/1.45 var(--body); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--pick); outline-offset: 3px; }
+#tio { height: 100%; display: flex; flex-direction: column; }
+#tio-top, #tio-dock { flex: none; }
+#tio-stage { flex: 1; min-height: 0; overflow-y: auto; scrollbar-gutter: stable both-edges; padding: 8px 20px 24px; }
+#tio-stage > * { max-width: var(--col); margin-inline: auto; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }

@@ -1,0 +1,32 @@
+/* PIECE A — scene screen */
+.scene { display: flex; flex-direction: column; gap: 14px; padding-top: 8px; }
+.scene-skill { margin: 0; font: 800 14px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--banana-deep); }
+.scene-setting { margin: 0; color: var(--ink-soft); }
+.speaker { display: flex; align-items: flex-start; gap: 14px; }
+.speaker-face { flex: none; width: 84px; height: 84px; border-radius: 28px; display: grid; place-items: center; font-size: 50px; line-height: 1; }
+.bubble { position: relative; min-width: 0; padding: 12px 16px; border: 2px solid var(--line); border-radius: var(--r); background: var(--paper); }
+.bubble::before { content: ''; position: absolute; left: -9px; top: 26px; width: 14px; height: 14px; background: var(--paper);
+  border-left: 2px solid var(--line); border-bottom: 2px solid var(--line); transform: rotate(45deg); }
+.bubble-who { display: block; font-size: 14px; color: var(--ink-soft); }
+.bubble-says { margin: 2px 0 0; font: 700 22px/1.25 var(--display); }
+.scene-ask { margin: 8px 0 0; font: 800 24px/1.1 var(--display); }
+.replies { display: flex; flex-direction: column; gap: 10px; }
+.reply { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 14px 16px;
+  border: 2px solid var(--line); border-bottom-width: 4px; border-radius: var(--r); background: var(--paper); transition: background .12s, border-color .12s, transform .08s; }
+.reply:hover:not(:disabled) { background: var(--mist); }
+.reply:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 2px; margin-bottom: 2px; }
+.reply-key { flex: none; width: 28px; height: 28px; border: 2px solid var(--line); border-radius: 8px; display: grid; place-items: center; font: 800 14px/1 var(--body); color: var(--ink-soft); }
+.reply-body { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.reply-act { font-size: 15px; color: var(--ink-soft); }
+.reply-text { font-weight: 700; }
+.reply.is-picked { border-color: var(--pick); background: var(--pick-wash); }
+.reply.is-picked .reply-key { border-color: var(--pick); color: var(--pick); }
+.reply:disabled { cursor: default; color: inherit; }
+.reply.is-great, .reply.is-best { border-color: var(--great); background: var(--great-wash); }
+.reply.is-ok { border-color: var(--ok); background: var(--ok-wash); }
+.reply.is-oops { border-color: var(--oops); background: var(--oops-wash); }
+.reply.is-dim { opacity: .5; }
+@media (max-width: 480px) {
+  .speaker-face { width: 64px; height: 64px; border-radius: 22px; font-size: 38px; }
+  .bubble-says { font-size: 19px; }
+}
